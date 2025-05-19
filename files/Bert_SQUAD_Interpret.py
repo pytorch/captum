@@ -3,11 +3,11 @@
 
 # # Interpreting BERT Models (Part 1)
 
-# In this notebook we demonstrate how to interpret Bert models using  `Captum` library. In this particular case study we focus on a fine-tuned Question Answering model on SQUAD dataset using transformers library from Hugging Face: https://huggingface.co/transformers/
+# In this notebook we demonstrate how to interpret BERT models using the `Captum` library. In this particular case study we focus on a fine-tuned Question Answering model on the SQUAD dataset using a transformers library from Hugging Face: https://huggingface.co/transformers/.
 # 
-# We show how to use interpretation hooks to examine and better understand embeddings, sub-embeddings, bert, and attention layers. 
+# We show how to use interpretation hooks to examine and better understand embeddings, sub-embeddings, BERT, and attention layers. 
 # 
-# Note: Before running this tutorial, please install `seaborn`, `pandas` and `matplotlib`, `transformers`(from hugging face, tested on transformer version `4.3.0.dev0`) python packages.
+# Note: Before running this tutorial, please install `seaborn`, `pandas`, `matplotlib`, and `transformers`(from hugging face, tested on transformer version `4.3.0.dev0`) python packages.
 
 # In[1]:
 
@@ -30,7 +30,7 @@ from captum.attr import LayerConductance, LayerIntegratedGradients
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-# The first step is to fine-tune BERT model on SQUAD dataset. This can be easiy accomplished by following the steps described in hugging face's official web site: https://github.com/huggingface/transformers#run_squadpy-fine-tuning-on-squad-for-question-answering 
+# The first step is to fine-tune the BERT model on the SQUAD dataset. This can be easiy accomplished by following the steps described in hugging face's official web site: https://github.com/huggingface/transformers#run_squadpy-fine-tuning-on-squad-for-question-answering.
 # 
 # Note that the fine-tuning is done on a `bert-base-uncased` pre-trained model.
 
@@ -61,7 +61,7 @@ def predict(inputs, token_type_ids=None, position_ids=None, attention_mask=None)
                  position_ids=position_ids, attention_mask=attention_mask, )
     return output.start_logits, output.end_logits
 
-# Defining a custom forward function that will allow us to access the start and end postitions of our prediction using `position` input argument.
+# Defining a custom forward function that will allow us to access the start and end postitions of our prediction using the `position` input argument.
 
 # In[5]:
 
@@ -77,9 +77,9 @@ def squad_pos_forward_func(inputs, token_type_ids=None, position_ids=None, atten
 
 # Let's compute attributions with respect to the `BertEmbeddings` layer.
 # 
-# To do so, we need to define baselines / references, numericalize both the baselines and the inputs. We will define helper functions to achieve that.
+# To do so, we need to define baselines / references, and numericalize both the baselines and the inputs. We will define helper functions to achieve that.
 # 
-# The cell below defines numericalized special tokens that will be later used for constructing inputs and corresponding baselines/references.
+# The cell below defines numericalized special tokens that will be later used for constructing inputs and corresponding baselines / references.
 
 # In[6]:
 
@@ -88,7 +88,7 @@ ref_token_id = tokenizer.pad_token_id # A token used for generating token refere
 sep_token_id = tokenizer.sep_token_id # A token used as a separator between question and text and it is also added to the end of the text.
 cls_token_id = tokenizer.cls_token_id # A token used for prepending to the concatenated question-text word sequence
 
-# Below we define a set of helper function for constructing references / baselines for word tokens, token types and position ids. We also provide separate helper functions that allow to construct attention masks and bert embeddings both for input and reference.
+# Below we define a set of helper function for constructing baselines / references for word tokens, token types and position IDs. We also provide separate helper functions that allow to construct attention masks and BERT embeddings both for input and reference.
 
 # In[7]:
 
@@ -134,7 +134,7 @@ def construct_whole_bert_embeddings(input_ids, ref_input_ids, \
     return input_embeddings, ref_input_embeddings
 
 
-# Let's define the `question - text` pair that we'd like to use as an input for our Bert model and interpret what the model was forcusing on when predicting an answer to the question from given input text 
+# Let's define the `question - text` pair that we'd like to use as an input for our BERT model and interpret what the model was focusing on when predicting an answer to the question from a given input text.
 
 # In[8]:
 
@@ -165,7 +165,7 @@ ground_truth_tokens = tokenizer.encode(ground_truth, add_special_tokens=False)
 ground_truth_end_ind = indices.index(ground_truth_tokens[-1])
 ground_truth_start_ind = ground_truth_end_ind - len(ground_truth_tokens) + 1
 
-# Now let's make predictions using input, token type, position id and a default attention mask.
+# Now let's make predictions using input, token type, position ID and a default attention mask.
 
 # In[11]:
 
@@ -179,7 +179,7 @@ start_scores, end_scores = predict(input_ids, \
 print('Question: ', question)
 print('Predicted Answer: ', ' '.join(all_tokens[torch.argmax(start_scores) : torch.argmax(end_scores)+1]))
 
-# There are two different ways of computing the attributions for emebdding layers. One option is to use `LayerIntegratedGradients` and compute the attributions with respect to `BertEmbedding`. The second option is to use `LayerIntegratedGradients` for each `word_embeddings`, `token_type_embeddings` and `position_embeddings` and compute the attributions w.r.t each embedding vector.
+# There are two different ways of computing the attributions for emebedding layers. One option is to use `LayerIntegratedGradients` and compute the attributions with respect to `BertEmbedding`. The second option is to use `LayerIntegratedGradients` for each `word_embeddings`, `token_type_embeddings` and `position_embeddings` and compute the attributions with respect to each embedding vector.
 # 
 
 # In[12]:
@@ -253,9 +253,9 @@ Image(filename='img/bert/visuals_of_start_end_predictions.png')
 
 # # Multi-Embedding attribution
 
-# Now let's look into the sub-embeddings of `BerEmbeddings` and try to understand the contributions and roles of each of them for both start and end predicted positions.
+# Now let's look into the sub-embeddings of `BertEmbeddings` and try to understand the contributions and roles of each of them for both start and end predicted positions.
 # 
-# To do so, we will use `LayerIntegratedGradients` for all three layer:  `word_embeddings`, `token_type_embeddings` and `position_embeddings`.
+# To do so, we will use `LayerIntegratedGradients` for all three layers: `word_embeddings`, `token_type_embeddings` and `position_embeddings`.
 
 # Now let's create an instance of `LayerIntegratedGradients` and compute the attributions with respect to all those embeddings both for the start and end positions and summarize them for each word token.
 
@@ -284,7 +284,7 @@ attributions_start_position = summarize_attributions(attributions_start[2])
 attributions_end_position = summarize_attributions(attributions_end[2])
 
 
-# An auxilary function that will help us to compute topk attributions and corresponding indices
+# An auxiliary function that will help us to compute top-K attributions and corresponding indices
 
 # In[18]:
 
@@ -296,7 +296,7 @@ def get_topk_attributed_tokens(attrs, k=5):
 
 # Removing interpretation hooks from all layers after finishing attribution.
 
-# Computing topk attributions for all sub-embeddings and placing them in pandas dataframes for better visualization.
+# Computing top-K attributions for all sub-embeddings and placing them in pandas dataframes for better visualization.
 
 # In[19]:
 
@@ -322,7 +322,7 @@ df_end.style.apply(['cell_ids: False'])
 
 ['{}({})'.format(token, str(i)) for i, token in enumerate(all_tokens)]
 
-# Below we can see top 5 attribution results from all three embedding types in predicting start positions.
+# Below we can see the top 5 attribution results from all three embedding types in predicting start positions.
 
 # #### Top 5 attributed embeddings for start position
 
@@ -333,11 +333,11 @@ df_start
 
 # Word embeddings help to focus more on the surrounding tokens of the predicted answer's start position to such as em, ##power and ,. It also has high attribution for the tokens in the question such as what and ?.
 # 
-# In contrast to to word embedding, token embedding type focuses more on the tokens in the text part such as important,em and start token to.
+# In contrast to word embedding, token embedding type focuses more on the tokens in the text part such as important,em and start token to.
 # 
 # Position embedding also has high attribution score for the tokens surrounding to such as us and important. In addition to that, similar to word embedding we observe important tokens from the question.
 # 
-# We can perform similar analysis, and visualize top 5 attributed tokens for all three embedding types, also for the end position prediction.
+# We can perform a similar analysis, and visualize top 5 attributed tokens for all three embedding types, also for the end position prediction.
 # 
 
 # #### Top 5 attributed embeddings for end position
@@ -347,17 +347,17 @@ df_start
 
 df_end
 
-# It is interesting to observe high concentration of highly attributed tokens such as `of`, `kinds`, `support` and `##power` for end position prediction.
+# It is interesting to observe a high concentration of highly attributed tokens such as `of`, `kinds`, `support` and `##power` for end position prediction.
 # 
 # The token `kinds`, which is the correct predicted token appears to have high attribution score both according word and position embeddings.
 # 
 
-# # Interpreting Bert Layers
+# # Interpreting BERT Layers
 
-# Now let's look into the layers of our network. More specifically we would like to look into the distribution of attribution scores for each token across all layers in Bert model and dive deeper into specific tokens.  
+# Now let's look into the layers of our network. More specifically we would like to look into the distribution of attribution scores for each token across all layers of the BERT model and dive deeper into specific tokens.
 # We do that using one of layer attribution algorithms, namely, layer conductance. However, we encourage you to try out and compare the results with other algorithms as well.
 
-# Let's define another version of squad forward function that takes emebddings as input argument. This is necessary for `LayerConductance` algorithm.
+# Let's define another version of squad forward function that takes emebddings as an input argument. This is necessary for `LayerConductance` algorithm.
 
 # In[22]:
 
@@ -367,10 +367,10 @@ def squad_pos_forward_func2(input_emb, attention_mask=None, position=0):
     pred = pred[position]
     return pred.max(1).values
 
-# Let's iterate over all layers and compute the attributions for all tokens. In addition to that let's also choose a specific token that we would like to examine in detail, specified by an id `token_to_explain` and store related information in a separate array.
+# Let's iterate over all layers and compute the attributions for all tokens. In addition to that let's also choose a specific token that we would like to examine in detail, specified by an ID `token_to_explain` and store related information in a separate array.
 # 
 # 
-# Note: Since below code is iterating over all layers it can take over 5 seconds. Please be patient!
+# Note: Since the below code is iterating over all layers it can take over 5 seconds. Please be patient!
 
 # In[23]:
 
@@ -401,9 +401,9 @@ for i in range(model.config.num_hidden_layers):
 
 # The plot below represents a heat map of attributions across all layers and tokens for the start position prediction. 
 # It is interesting to observe that the question word `what` gains increasingly high attribution from layer one to nine. In the last three layers that importance is slowly diminishing.  
-# In contrary to `what` token, many other tokens have negative or close to zero attribution in the first 6 layers. 
+# In contrast to `what` token, many other tokens have negative or close to zero attribution in the first 6 layers. 
 # 
-# We start seeing slightly higher attribution in tokens `important`, `us` and `to`. Interestingly token `em` is also assigned high attribution score which is remarkably high the last three layers.
+# We start seeing slightly higher attribution in tokens `important`, `us` and `to`. Interestingly token `em` is also assigned high attribution score which is remarkably high in the last three layers.
 # And lastly, our correctly predicted token `to` for the start position gains increasingly positive attribution has relatively high attribution especially in the last two layers.
 # 
 
@@ -491,7 +491,7 @@ layer_attrs_end_pdf = np.transpose(layer_attrs_end_pdf)
 #size: #bins x #layers
 layer_attrs_end_pdf = np.divide(layer_attrs_end_pdf, layer_attrs_end_pdf_norm, where=layer_attrs_end_pdf_norm!=0)
 
-# The plot below visualizes the probability mass function (pmf) of attributions for each layer for the end position token `kinds`. From the plot we can observe that the distributions are taking bell-curved shapes with different means and variances.
+# The plot below visualizes the probability mass function (pmf) of attributions for each layer for the end position token `kinds`. From the plot we can observe that the distributions are approximately bell-curved shapes with different means and variances.
 # We can now use attribution pdfs to compute entropies in the next cell.
 
 # In[30]:
@@ -504,9 +504,9 @@ plt.ylabel('Density')
 plt.legend(['Layer '+ str(i) for i in range(1,13)])
 plt.show()
 
-# Below we calculate and visualize attribution entropies based on Shannon entropy measure where the x-axis corresponds to the number of layers and the y-axis corresponds to the total attribution in that layer. The size of the circles for each (layer, total_attribution) pair correspond to the normalized entropy value at that point.
+# Below we calculate and visualize attribution entropies based on the Shannon entropy measure where the x-axis corresponds to the number of layers and the y-axis corresponds to the total attribution in that layer. The size of the circles for each (layer, total_attribution) pair correspond to the normalized entropy value at that point.
 # 
-# In this particular example, we observe that the entropy doesn't change much from layer to layer, however in a general case entropy can provide us an intuition about the distributional characteristics of attributions in each layer and can be useful especially when comparing it across multiple tokens.
+# In this particular example, we observe that the entropy doesn't change much from layer to layer, however in a general case entropy can provide an intuition about the distributional characteristics of attributions in each layer and can be useful especially when comparing it across multiple tokens.
 # 
 
 # In[31]:
@@ -526,4 +526,4 @@ plt.xlabel('Layers')
 plt.ylabel('Total Attribution')
 plt.show()
 
-# In the Part 2 of this tutorial we will to go deeper into attention layers, heads and compare the attributions with the attention weight matrices, study and discuss related statistics.
+# In the Part 2 of this tutorial we will go deeper into attention layers, heads and compare the attributions with the attention weight matrices, study and discuss related statistics.

@@ -3,11 +3,11 @@
 
 # # Interpreting text models:  IMDB sentiment analysis
 
-# This notebook loads pretrained CNN model for sentiment analysis on IMDB dataset. It makes predictions on test samples and interprets those predictions using integrated gradients method.
+# This notebook loads a pretrained CNN model for sentiment analysis on an IMDB dataset. It makes predictions on test samples and interprets those predictions using the Integrated Gradients method.
 # 
 # The model was trained using an open source sentiment analysis tutorials described in: https://github.com/bentrevett/pytorch-sentiment-analysis/blob/master/4%20-%20Convolutional%20Sentiment%20Analysis.ipynb with the following changes:
 # 
-# - TEXT: set lower=True at initialization and call build_vocab() on the entire training data including validation to avoid mismatched indices
+# - TEXT: set lower=True at initialization and call build_vocab() on the entire training data including validation, to avoid mismatched indices
 # - model: save the entire model instead of just model.state_dict()
 # 
 # **Note:** Before running this tutorial, please install the spacy package, and its NLP modules for English language.
@@ -43,7 +43,7 @@ for package in (captum, spacy, torch, torchtext):
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-# The dataset used for training this model can be found in: https://ai.stanford.edu/~amaas/data/sentiment/
+# The dataset used for training this model can be found in: https://ai.stanford.edu/~amaas/data/sentiment/.
 # 
 # Redefining the model in order to be able to load it.
 # 
@@ -72,37 +72,37 @@ class CNN(nn.Module):
         
     def forward(self, text):
         
-        #text = [sent len, batch size]
+        # text = [sent len, batch size]
         
-        #text = text.permute(1, 0)
+        # text = text.permute(1, 0)
                 
-        #text = [batch size, sent len]
+        # text = [batch size, sent len]
         
         embedded = self.embedding(text)
 
-        #embedded = [batch size, sent len, emb dim]
+        # embedded = [batch size, sent len, emb dim]
         
         embedded = embedded.unsqueeze(1)
         
-        #embedded = [batch size, 1, sent len, emb dim]
+        # embedded = [batch size, 1, sent len, emb dim]
         
         conved = [F.relu(conv(embedded)).squeeze(3) for conv in self.convs]
             
-        #conved_n = [batch size, n_filters, sent len - filter_sizes[n] + 1]
+        # conved_n = [batch size, n_filters, sent len - filter_sizes[n] + 1]
                 
         pooled = [F.max_pool1d(conv, conv.shape[2]).squeeze(2) for conv in conved]
         
-        #pooled_n = [batch size, n_filters]
+        # pooled_n = [batch size, n_filters]
         
         cat = self.dropout(torch.cat(pooled, dim = 1))
 
-        #cat = [batch size, n_filters * len(filter_sizes)]
+        # cat = [batch size, n_filters * len(filter_sizes)]
             
         return self.fc(cat)
 
 # Loads pretrained model and sets the model to eval mode.
 # 
-# The model can be downloaded here: https://github.com/pytorch/captum/blob/master/tutorials/models/imdb-model-cnn-large.pt
+# The model can be downloaded here: https://github.com/pytorch/captum/blob/master/tutorials/models/imdb-model-cnn-large.pt.
 
 # In[ ]:
 
@@ -111,7 +111,7 @@ model = torch.load('models/imdb-model-cnn-large.pt')
 model.eval()
 model = model.to(device)
 
-# Forward function that supports sigmoid
+# Forward function that supports sigmoid.
 
 # In[6]:
 
@@ -179,7 +179,7 @@ PAD_IND = TEXT.vocab.stoi[TEXT.pad_token]
 token_reference = TokenReferenceBase(reference_token_idx=PAD_IND)
 
 # Let's create an instance of `LayerIntegratedGradients` using forward function of our model and the embedding layer.
-# This instance of layer integrated gradients will be used to interpret movie rating review.
+# This instance of Layer Integrated Gradients will be used to interpret movie rating review.
 # 
 # Layer Integrated Gradients will allow us to assign an attribution score to each word/token embedding tensor in the movie review text. We will ultimately sum the attribution scores across all embedding dimensions for each word/token in order to attain a word/token level attribution score.
 # 
@@ -195,7 +195,7 @@ lig = LayerIntegratedGradients(model, model.embedding)
 # In[14]:
 
 
-# accumalate couple samples in this array for visualization purposes
+# accumulate couple samples in this array for visualization purposes
 vis_data_records_ig = []
 
 def interpret_sentence(model, sentence, min_len = 7, label = 0):

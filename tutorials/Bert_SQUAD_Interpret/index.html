@@ -86,9 +86,9 @@
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>In this notebook we demonstrate how to interpret Bert models using  <code>Captum</code> library. In this particular case study we focus on a fine-tuned Question Answering model on SQUAD dataset using transformers library from Hugging Face: <a href="https://huggingface.co/transformers/">https://huggingface.co/transformers/</a></p>
-<p>We show how to use interpretation hooks to examine and better understand embeddings, sub-embeddings, bert, and attention layers.</p>
-<p>Note: Before running this tutorial, please install <code>seaborn</code>, <code>pandas</code> and <code>matplotlib</code>, <code>transformers</code>(from hugging face, tested on transformer version <code>4.3.0.dev0</code>) python packages.</p>
+<p>In this notebook we demonstrate how to interpret BERT models using the <code>Captum</code> library. In this particular case study we focus on a fine-tuned Question Answering model on the SQUAD dataset using a transformers library from Hugging Face: <a href="https://huggingface.co/transformers/">https://huggingface.co/transformers/</a>.</p>
+<p>We show how to use interpretation hooks to examine and better understand embeddings, sub-embeddings, BERT, and attention layers.</p>
+<p>Note: Before running this tutorial, please install <code>seaborn</code>, <code>pandas</code>, <code>matplotlib</code>, and <code>transformers</code>(from hugging face, tested on transformer version <code>4.3.0.dev0</code>) python packages.</p>
 </div>
 </div>
 </div>
@@ -128,7 +128,7 @@
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The first step is to fine-tune BERT model on SQUAD dataset. This can be easiy accomplished by following the steps described in hugging face's official web site: <a href="https://github.com/huggingface/transformers#run_squadpy-fine-tuning-on-squad-for-question-answering">https://github.com/huggingface/transformers#run_squadpy-fine-tuning-on-squad-for-question-answering</a></p>
+<p>The first step is to fine-tune the BERT model on the SQUAD dataset. This can be easiy accomplished by following the steps described in hugging face's official web site: <a href="https://github.com/huggingface/transformers#run_squadpy-fine-tuning-on-squad-for-question-answering">https://github.com/huggingface/transformers#run_squadpy-fine-tuning-on-squad-for-question-answering</a>.</p>
 <p>Note that the fine-tuning is done on a <code>bert-base-uncased</code> pre-trained model.</p>
 </div>
 </div>
@@ -185,7 +185,7 @@
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Defining a custom forward function that will allow us to access the start and end postitions of our prediction using <code>position</code> input argument.</p>
+<p>Defining a custom forward function that will allow us to access the start and end postitions of our prediction using the <code>position</code> input argument.</p>
 </div>
 </div>
 </div>
@@ -210,8 +210,8 @@
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>Let's compute attributions with respect to the <code>BertEmbeddings</code> layer.</p>
-<p>To do so, we need to define baselines / references, numericalize both the baselines and the inputs. We will define helper functions to achieve that.</p>
-<p>The cell below defines numericalized special tokens that will be later used for constructing inputs and corresponding baselines/references.</p>
+<p>To do so, we need to define baselines / references, and numericalize both the baselines and the inputs. We will define helper functions to achieve that.</p>
+<p>The cell below defines numericalized special tokens that will be later used for constructing inputs and corresponding baselines / references.</p>
 </div>
 </div>
 </div>
@@ -231,7 +231,7 @@
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Below we define a set of helper function for constructing references / baselines for word tokens, token types and position ids. We also provide separate helper functions that allow to construct attention masks and bert embeddings both for input and reference.</p>
+<p>Below we define a set of helper function for constructing baselines / references for word tokens, token types and position IDs. We also provide separate helper functions that allow to construct attention masks and BERT embeddings both for input and reference.</p>
 </div>
 </div>
 </div>
@@ -287,7 +287,7 @@
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Let's define the <code>question - text</code> pair that we'd like to use as an input for our Bert model and interpret what the model was forcusing on when predicting an answer to the question from given input text</p>
+<p>Let's define the <code>question - text</code> pair that we'd like to use as an input for our BERT model and interpret what the model was focusing on when predicting an answer to the question from a given input text.</p>
 </div>
 </div>
 </div>
@@ -351,7 +351,7 @@
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Now let's make predictions using input, token type, position id and a default attention mask.</p>
+<p>Now let's make predictions using input, token type, position ID and a default attention mask.</p>
 </div>
 </div>
 </div>
@@ -388,7 +388,7 @@ Predicted Answer:  to include , em ##power and support humans of all kinds
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>There are two different ways of computing the attributions for emebdding layers. One option is to use <code>LayerIntegratedGradients</code> and compute the attributions with respect to <code>BertEmbedding</code>. The second option is to use <code>LayerIntegratedGradients</code> for each <code>word_embeddings</code>, <code>token_type_embeddings</code> and <code>position_embeddings</code> and compute the attributions w.r.t each embedding vector.</p>
+<p>There are two different ways of computing the attributions for emebedding layers. One option is to use <code>LayerIntegratedGradients</code> and compute the attributions with respect to <code>BertEmbedding</code>. The second option is to use <code>LayerIntegratedGradients</code> for each <code>word_embeddings</code>, <code>token_type_embeddings</code> and <code>position_embeddings</code> and compute the attributions with respect to each embedding vector.</p>
 </div>
 </div>
 </div>
@@ -557,8 +557,8 @@ Predicted Answer:  to include , em ##power and support humans of all kinds
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Now let's look into the sub-embeddings of <code>BerEmbeddings</code> and try to understand the contributions and roles of each of them for both start and end predicted positions.</p>
-<p>To do so, we will use <code>LayerIntegratedGradients</code> for all three layer:  <code>word_embeddings</code>, <code>token_type_embeddings</code> and <code>position_embeddings</code>.</p>
+<p>Now let's look into the sub-embeddings of <code>BertEmbeddings</code> and try to understand the contributions and roles of each of them for both start and end predicted positions.</p>
+<p>To do so, we will use <code>LayerIntegratedGradients</code> for all three layers: <code>word_embeddings</code>, <code>token_type_embeddings</code> and <code>position_embeddings</code>.</p>
 </div>
 </div>
 </div>
@@ -602,7 +602,7 @@ Predicted Answer:  to include , em ##power and support humans of all kinds
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>An auxilary function that will help us to compute topk attributions and corresponding indices</p>
+<p>An auxiliary function that will help us to compute top-K attributions and corresponding indices</p>
 </div>
 </div>
 </div>
@@ -630,7 +630,7 @@ Predicted Answer:  to include , em ##power and support humans of all kinds
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Computing topk attributions for all sub-embeddings and placing them in pandas dataframes for better visualization.</p>
+<p>Computing top-K attributions for all sub-embeddings and placing them in pandas dataframes for better visualization.</p>
 </div>
 </div>
 </div>
@@ -702,7 +702,7 @@ Predicted Answer:  to include , em ##power and support humans of all kinds
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Below we can see top 5 attribution results from all three embedding types in predicting start positions.</p>
+<p>Below we can see the top 5 attribution results from all three embedding types in predicting start positions.</p>
 </div>
 </div>
 </div>
@@ -794,9 +794,9 @@ Predicted Answer:  to include , em ##power and support humans of all kinds
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>Word embeddings help to focus more on the surrounding tokens of the predicted answer's start position to such as em, ##power and ,. It also has high attribution for the tokens in the question such as what and ?.</p>
-<p>In contrast to to word embedding, token embedding type focuses more on the tokens in the text part such as important,em and start token to.</p>
+<p>In contrast to word embedding, token embedding type focuses more on the tokens in the text part such as important,em and start token to.</p>
 <p>Position embedding also has high attribution score for the tokens surrounding to such as us and important. In addition to that, similar to word embedding we observe important tokens from the question.</p>
-<p>We can perform similar analysis, and visualize top 5 attributed tokens for all three embedding types, also for the end position prediction.</p>
+<p>We can perform a similar analysis, and visualize top 5 attributed tokens for all three embedding types, also for the end position prediction.</p>
 </div>
 </div>
 </div>
@@ -887,7 +887,7 @@ Predicted Answer:  to include , em ##power and support humans of all kinds
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>It is interesting to observe high concentration of highly attributed tokens such as <code>of</code>, <code>kinds</code>, <code>support</code> and <code>##power</code> for end position prediction.</p>
+<p>It is interesting to observe a high concentration of highly attributed tokens such as <code>of</code>, <code>kinds</code>, <code>support</code> and <code>##power</code> for end position prediction.</p>
 <p>The token <code>kinds</code>, which is the correct predicted token appears to have high attribution score both according word and position embeddings.</p>
 </div>
 </div>
@@ -895,14 +895,14 @@ Predicted Answer:  to include , em ##power and support humans of all kinds
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Interpreting-Bert-Layers">Interpreting Bert Layers<a class="anchor-link" href="#Interpreting-Bert-Layers">¶</a></h1>
+<h1 id="Interpreting-BERT-Layers">Interpreting BERT Layers<a class="anchor-link" href="#Interpreting-BERT-Layers">¶</a></h1>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Now let's look into the layers of our network. More specifically we would like to look into the distribution of attribution scores for each token across all layers in Bert model and dive deeper into specific tokens.<br/>
+<p>Now let's look into the layers of our network. More specifically we would like to look into the distribution of attribution scores for each token across all layers of the BERT model and dive deeper into specific tokens.
 We do that using one of layer attribution algorithms, namely, layer conductance. However, we encourage you to try out and compare the results with other algorithms as well.</p>
 </div>
 </div>
@@ -910,7 +910,7 @@ We do that using one of layer attribution algorithms, namely, layer conductance.
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Let's define another version of squad forward function that takes emebddings as input argument. This is necessary for <code>LayerConductance</code> algorithm.</p>
+<p>Let's define another version of squad forward function that takes emebddings as an input argument. This is necessary for <code>LayerConductance</code> algorithm.</p>
 </div>
 </div>
 </div>
@@ -931,8 +931,8 @@ We do that using one of layer attribution algorithms, namely, layer conductance.
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Let's iterate over all layers and compute the attributions for all tokens. In addition to that let's also choose a specific token that we would like to examine in detail, specified by an id <code>token_to_explain</code> and store related information in a separate array.</p>
-<p>Note: Since below code is iterating over all layers it can take over 5 seconds. Please be patient!</p>
+<p>Let's iterate over all layers and compute the attributions for all tokens. In addition to that let's also choose a specific token that we would like to examine in detail, specified by an ID <code>token_to_explain</code> and store related information in a separate array.</p>
+<p>Note: Since the below code is iterating over all layers it can take over 5 seconds. Please be patient!</p>
 </div>
 </div>
 </div>
@@ -973,8 +973,8 @@ We do that using one of layer attribution algorithms, namely, layer conductance.
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>The plot below represents a heat map of attributions across all layers and tokens for the start position prediction. 
 It is interesting to observe that the question word <code>what</code> gains increasingly high attribution from layer one to nine. In the last three layers that importance is slowly diminishing.<br/>
-In contrary to <code>what</code> token, many other tokens have negative or close to zero attribution in the first 6 layers.</p>
-<p>We start seeing slightly higher attribution in tokens <code>important</code>, <code>us</code> and <code>to</code>. Interestingly token <code>em</code> is also assigned high attribution score which is remarkably high the last three layers.
+In contrast to <code>what</code> token, many other tokens have negative or close to zero attribution in the first 6 layers.</p>
+<p>We start seeing slightly higher attribution in tokens <code>important</code>, <code>us</code> and <code>to</code>. Interestingly token <code>em</code> is also assigned high attribution score which is remarkably high in the last three layers.
 And lastly, our correctly predicted token <code>to</code> for the start position gains increasingly positive attribution has relatively high attribution especially in the last two layers.</p>
 </div>
 </div>
@@ -1173,7 +1173,7 @@ The correctly predicted end token <code>kinds</code> has positive attribution ac
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The plot below visualizes the probability mass function (pmf) of attributions for each layer for the end position token <code>kinds</code>. From the plot we can observe that the distributions are taking bell-curved shapes with different means and variances.
+<p>The plot below visualizes the probability mass function (pmf) of attributions for each layer for the end position token <code>kinds</code>. From the plot we can observe that the distributions are approximately bell-curved shapes with different means and variances.
 We can now use attribution pdfs to compute entropies in the next cell.</p>
 </div>
 </div>
@@ -1208,8 +1208,8 @@ We can now use attribution pdfs to compute entropies in the next cell.</p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Below we calculate and visualize attribution entropies based on Shannon entropy measure where the x-axis corresponds to the number of layers and the y-axis corresponds to the total attribution in that layer. The size of the circles for each (layer, total_attribution) pair correspond to the normalized entropy value at that point.</p>
-<p>In this particular example, we observe that the entropy doesn't change much from layer to layer, however in a general case entropy can provide us an intuition about the distributional characteristics of attributions in each layer and can be useful especially when comparing it across multiple tokens.</p>
+<p>Below we calculate and visualize attribution entropies based on the Shannon entropy measure where the x-axis corresponds to the number of layers and the y-axis corresponds to the total attribution in that layer. The size of the circles for each (layer, total_attribution) pair correspond to the normalized entropy value at that point.</p>
+<p>In this particular example, we observe that the entropy doesn't change much from layer to layer, however in a general case entropy can provide an intuition about the distributional characteristics of attributions in each layer and can be useful especially when comparing it across multiple tokens.</p>
 </div>
 </div>
 </div>
@@ -1250,7 +1250,7 @@ We can now use attribution pdfs to compute entropies in the next cell.</p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>In the Part 2 of this tutorial we will to go deeper into attention layers, heads and compare the attributions with the attention weight matrices, study and discuss related statistics.</p>
+<p>In the Part 2 of this tutorial we will go deeper into attention layers, heads and compare the attributions with the attention weight matrices, study and discuss related statistics.</p>
 </div>
 </div>
 </div>
