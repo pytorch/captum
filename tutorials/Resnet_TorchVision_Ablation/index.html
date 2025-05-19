@@ -87,10 +87,10 @@
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>This notebook tutorial demonstrates how feature ablation in Captum can be applied to inspect computer vision models.</p>
-<p><strong>Task:</strong> Classification into ImageNet-1k categories</p>
-<p><strong>Model:</strong> A ResNet18 trained on ImageNet-1k</p>
-<p><strong>Data to inspect:</strong> Samples from PASCAL VOC 2012</p>
-<p><strong>Ablation based on:</strong> Segmentation masks</p>
+<p><strong>Task:</strong> Classification into ImageNet-1k categories.</p>
+<p><strong>Model:</strong> A ResNet18 trained on ImageNet-1k.</p>
+<p><strong>Data to inspect:</strong> Samples from PASCAL VOC (Visual Object Classes) 2012.</p>
+<p><strong>Ablation based on:</strong> Segmentation masks.</p>
 <p>We will use the visualization functions in Captum to show how each semantic part impacts the model output.</p>
 <p>This tutorial assumes the following packages are installed: <code>captum</code>, <code>matplotlib</code>, <code>numpy</code>, <code>PIL</code>, <code>torch</code>, and <code>torchvision</code>.</p>
 </div>
@@ -152,8 +152,8 @@
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>A straightforward way to demonstrate feature ablation on images is to ablate semantic image areas.</p>
-<p>Therefore, we will load sample images from PASCAL VOC, as these images come along with annotated segmentation masks.</p>
-<p><strong>Note</strong>: The VOC dataset is 2GB. If you do not want to download it, you can skip the next step and provide your own image and segmentation mask in the step next.</p>
+<p>Therefore, we will load sample images from VOC 2012, as these images come along with annotated segmentation masks.</p>
+<p><strong>Note</strong>: The VOC 2012 dataset is 2GB. If you do not want to download it, you can skip the next step and provide your own image and segmentation mask in the step next.</p>
 </div>
 </div>
 </div>
@@ -213,7 +213,7 @@
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>According to the segmentation mask, the image contains three bottles, and two TV monitors, with the rest considered background. All of <code>background</code>, <code>bottle</code>, and <code>tvmonitor</code> are among the 20 categories in PASCAL VOC 2012. This dataset also features a <code>void</code> category, used to annotate pixels that are not considered part of any class. These pixels represent border between the objects in the above example.</p>
+<p>According to the segmentation mask, the image contains three bottles, and two TV monitors, with the rest considered background. All of <code>background</code>, <code>bottle</code>, and <code>tvmonitor</code> are among the 20 categories in VOC 2012. This dataset also features a <code>void</code> category, used to annotate pixels that are not considered part of any class. These pixels represent border between the objects in the above example.</p>
 </div>
 </div>
 </div>
@@ -221,7 +221,7 @@
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>Let us also load ImageNet class labels to understand the output when we classify the samples using a classifier trained on ImageNet-1k.</p>
-<p><strong>Note</strong>: wget should be available as a command in your environment. You might need to install it. You can skip the next two steps if you are OK with class index as classification output (in that case, use <code>classify</code> in the next sections with <code>print_result</code>=<code>False</code>).</p>
+<p><strong>Note</strong>: wget should be available as a command in your environment, although you might need to install it. You can skip the next two steps if you are OK with class index as classification output (in that case, use <code>classify</code> in the next sections with <code>print_result</code>=<code>False</code>).</p>
 </div>
 </div>
 </div>
@@ -407,7 +407,7 @@ Let us see how:</p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>These ids correspond to the VOC labels for <code>background</code>, <code>bottle</code>, <code>tvmonitor</code> and <code>void</code>.</p>
+<p>These ids correspond to the VOC 2012 labels for <code>background</code>, <code>bottle</code>, <code>tvmonitor</code> and <code>void</code>.</p>
 <p>While they would work, Captum expects consecutive group ids and would hence consider that there are 256 feature groups (most of them empty). This would result in slow execution.</p>
 <p>Let's instead map our groups to consecutive values as expected by Captum:</p>
 </div>
@@ -524,7 +524,7 @@ Let us see how:</p>
 
 <span class="n">attribution_map</span> <span class="o">=</span> <span class="n">attribution_map</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
 <span class="c1"># adjust shape to height, width, channels </span>
-<span class="n">attribution_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">attribution_map</span><span class="p">,</span>  <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+<span class="n">attribution_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">attribution_map</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
 
 <span class="n">_</span> <span class="o">=</span> <span class="n">viz</span><span class="o">.</span><span class="n">visualize_image_attr</span><span class="p">(</span><span class="n">attribution_map</span><span class="p">,</span>
                              <span class="n">method</span><span class="o">=</span><span class="s2">"heat_map"</span><span class="p">,</span>

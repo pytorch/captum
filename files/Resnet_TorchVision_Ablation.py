@@ -5,13 +5,13 @@
 
 # This notebook tutorial demonstrates how feature ablation in Captum can be applied to inspect computer vision models. 
 # 
-# **Task:** Classification into ImageNet-1k categories
+# **Task:** Classification into ImageNet-1k categories.
 # 
-# **Model:** A ResNet18 trained on ImageNet-1k
+# **Model:** A ResNet18 trained on ImageNet-1k.
 # 
-# **Data to inspect:** Samples from PASCAL VOC 2012
+# **Data to inspect:** Samples from PASCAL VOC (Visual Object Classes) 2012.
 # 
-# **Ablation based on:** Segmentation masks
+# **Ablation based on:** Segmentation masks.
 # 
 # We will use the visualization functions in Captum to show how each semantic part impacts the model output.
 #   
@@ -51,9 +51,9 @@ resnet = resnet.eval()
 
 # A straightforward way to demonstrate feature ablation on images is to ablate semantic image areas.
 # 
-# Therefore, we will load sample images from PASCAL VOC, as these images come along with annotated segmentation masks.
+# Therefore, we will load sample images from VOC 2012, as these images come along with annotated segmentation masks.
 # 
-# **Note**: The VOC dataset is 2GB. If you do not want to download it, you can skip the next step and provide your own image and segmentation mask in the step next.
+# **Note**: The VOC 2012 dataset is 2GB. If you do not want to download it, you can skip the next step and provide your own image and segmentation mask in the step next.
 
 # In[3]:
 
@@ -77,11 +77,11 @@ plt.imshow(mask_img); plt.axis('off'); plt.show()
 
 
 
-# According to the segmentation mask, the image contains three bottles, and two TV monitors, with the rest considered background. All of `background`, `bottle`, and `tvmonitor` are among the 20 categories in PASCAL VOC 2012. This dataset also features a `void` category, used to annotate pixels that are not considered part of any class. These pixels represent border between the objects in the above example.
+# According to the segmentation mask, the image contains three bottles, and two TV monitors, with the rest considered background. All of `background`, `bottle`, and `tvmonitor` are among the 20 categories in VOC 2012. This dataset also features a `void` category, used to annotate pixels that are not considered part of any class. These pixels represent border between the objects in the above example.
 
 # Let us also load ImageNet class labels to understand the output when we classify the samples using a classifier trained on ImageNet-1k.
 # 
-# **Note**: wget should be available as a command in your environment. You might need to install it. You can skip the next two steps if you are OK with class index as classification output (in that case, use `classify` in the next sections with `print_result`=`False`). 
+# **Note**: wget should be available as a command in your environment, although you might need to install it. You can skip the next two steps if you are OK with class index as classification output (in that case, use `classify` in the next sections with `print_result`=`False`). 
 
 # In[5]:
 
@@ -168,7 +168,7 @@ feature_mask = np.array(mask_img.getdata()).reshape(1, 1, mask_img.size[1], mask
 
 print(np.unique(feature_mask))
 
-# These ids correspond to the VOC labels for `background`, `bottle`, `tvmonitor` and `void`.
+# These ids correspond to the VOC 2012 labels for `background`, `bottle`, `tvmonitor` and `void`.
 # 
 # While they would work, Captum expects consecutive group ids and would hence consider that there are 256 feature groups (most of them empty). This would result in slow execution.
 # 
@@ -233,7 +233,7 @@ attribution_map = ablator.attribute(
 
 attribution_map = attribution_map.squeeze().cpu().detach().numpy()
 # adjust shape to height, width, channels 
-attribution_map = np.transpose(attribution_map,  (1,2,0))
+attribution_map = np.transpose(attribution_map, (1,2,0))
 
 _ = viz.visualize_image_attr(attribution_map,
                              method="heat_map",
