@@ -903,10 +903,10 @@ class _PlaceholderModel:
     `device`, so creating this class to set the device.
     """
 
-    def __init__(self):
-        self.device = torch.device("cpu")
+    def __init__(self) -> None:
+        self.device: Union[torch.device, str] = torch.device("cpu")
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: Any, **kwargs: Any) -> int:
         return 0
 
 
