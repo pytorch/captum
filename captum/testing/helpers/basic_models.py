@@ -437,8 +437,11 @@ class BasicModel_GradientLayerAttribution(nn.Module):
         self,
         inplace: bool = False,
         unsupported_layer_output: Optional[PassThroughOutputType] = None,
+        dict_output: bool = True,
     ) -> None:
         super().__init__()
+
+        self.dict_output = dict_output
         # Linear 0 is simply identity transform
         self.unsupported_layer_output = unsupported_layer_output
         self.linear0 = nn.Linear(3, 3)
@@ -469,7 +472,7 @@ class BasicModel_GradientLayerAttribution(nn.Module):
     @no_type_check
     def forward(
         self, x: Tensor, add_input: Optional[Tensor] = None
-    ) -> Dict[str, Tensor]:
+    ) -> Union[Dict[str, Tensor], Tensor]:
         input = x if add_input is None else x + add_input
         lin0_out = self.linear0(input)
         lin1_out = self.linear1(lin0_out)
@@ -490,12 +493,16 @@ class BasicModel_GradientLayerAttribution(nn.Module):
 
         output_tensors = torch.cat((lin2_out, int_output), dim=1)
 
+        return (
+            output_tensors
+            if not self.dict_output
+            else {
+                "task {}".format(i + 1): output_tensors[:, i]
+                for i in range(output_tensors.shape[1])
+            }
+        )
         # we return a dictionary of tensors as an output to test the case
         # where an output accessor is required
-        return {
-            "task {}".format(i + 1): output_tensors[:, i]
-            for i in range(output_tensors.shape[1])
-        }
 
 
 class MultiRelu(nn.Module):
