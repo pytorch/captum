@@ -1136,7 +1136,10 @@ class TestRemoteLLMAttr(BaseTest):
 
         tokenizer = DummyTokenizer()
         provider = DummyRemoteLLMProvider(deterministic_logprobs=True)
-        attr_method = AttrClass(RemoteLLMAttribution.placeholder_model)
+        # attr_method = AttrClass(RemoteLLMAttribution.placeholder_model)
+        placeholder_model = RemoteLLMAttribution.placeholder_model
+        placeholder_model.device = self.device
+        attr_method = AttrClass(placeholder_model)
         remote_llm_attr = RemoteLLMAttribution(
             attr_method=attr_method,
             tokenizer=tokenizer,
@@ -1182,7 +1185,10 @@ class TestRemoteLLMAttr(BaseTest):
 
         tokenizer = DummyTokenizer()
         provider = DummyRemoteLLMProvider(deterministic_logprobs=True)
-        attr_method = FeatureAblation(RemoteLLMAttribution.placeholder_model)
+        # attr_method = FeatureAblation(RemoteLLMAttribution.placeholder_model)
+        placeholder_model = RemoteLLMAttribution.placeholder_model
+        placeholder_model.device = self.device
+        attr_method = FeatureAblation(placeholder_model)
         remote_llm_attr = RemoteLLMAttribution(
             attr_method=attr_method,
             tokenizer=tokenizer,
@@ -1268,7 +1274,10 @@ class TestRemoteLLMAttr(BaseTest):
 
         tokenizer = DummyTokenizer()
         provider = DummyRemoteLLMProvider(deterministic_logprobs=True)
-        attr_method = AttrClass(RemoteLLMAttribution.placeholder_model, **init_kws)
+        # attr_method = AttrClass(RemoteLLMAttribution.placeholder_model, **init_kws)
+        placeholder_model = RemoteLLMAttribution.placeholder_model
+        placeholder_model.device = self.device
+        attr_method = AttrClass(placeholder_model, **init_kws)
         remote_llm_attr = RemoteLLMAttribution(
             attr_method=attr_method,
             tokenizer=tokenizer,
