@@ -55,6 +55,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">captum.attr._core.layer.layer_gradient_x_activation</span> <span class="kn">import</span> <span class="n">LayerGradientXActivation</span>
 <span class="kn">from</span> <span class="nn">captum.attr._core.layer.layer_integrated_gradients</span> <span class="kn">import</span> <span class="n">LayerIntegratedGradients</span>
 <span class="kn">from</span> <span class="nn">captum.attr._core.lime</span> <span class="kn">import</span> <span class="n">Lime</span>
+<span class="kn">from</span> <span class="nn">captum.attr._core.remote_provider</span> <span class="kn">import</span> <span class="n">RemoteLLMProvider</span>
 <span class="kn">from</span> <span class="nn">captum.attr._core.shapley_value</span> <span class="kn">import</span> <span class="n">ShapleyValues</span><span class="p">,</span> <span class="n">ShapleyValueSampling</span>
 <span class="kn">from</span> <span class="nn">captum.attr._utils.attribution</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">Attribution</span><span class="p">,</span>
@@ -951,6 +952,161 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="c1"># the attribution target is limited to the log probability</span>
         <span class="k">return</span> <span class="n">token_log_probs</span>
+
+
+<span class="k">class</span> <span class="nc">_PlaceholderModel</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Simple placeholder model that can be used with</span>
+<span class="sd">    RemoteLLMAttribution without needing a real model.</span>
+<span class="sd">    This can be acheived by `lambda *_:0` but BaseLLMAttribution expects</span>
+<span class="sd">    `device`, so creating this class to set the device.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">"cpu"</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+
+<span class="k">class</span> <span class="nc">RemoteLLMAttribution</span><span class="p">(</span><span class="n">LLMAttribution</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Attribution class for large language models</span>
+<span class="sd">    that are hosted remotely and offer logprob APIs.</span>
+<span class="sd">    """</span>
+
+    <span class="n">placeholder_model</span> <span class="o">=</span> <span class="n">_PlaceholderModel</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">attr_method</span><span class="p">:</span> <span class="n">PerturbationAttribution</span><span class="p">,</span>
+        <span class="n">tokenizer</span><span class="p">:</span> <span class="n">TokenizerLike</span><span class="p">,</span>
+        <span class="n">provider</span><span class="p">:</span> <span class="n">RemoteLLMProvider</span><span class="p">,</span>
+        <span class="n">attr_target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"log_prob"</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Args:</span>
+<span class="sd">            attr_method: Instance of a supported perturbation attribution class</span>
+<span class="sd">            tokenizer (Tokenizer): tokenizer of the llm model used in the attr_method</span>
+<span class="sd">            provider: Remote LLM provider that implements the RemoteLLMProvider protocol</span>
+<span class="sd">            attr_target: attribute towards log probability or probability.</span>
+<span class="sd">                    Available values ["log_prob", "prob"]</span>
+<span class="sd">                    Default: "log_prob"</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">attr_method</span><span class="o">=</span><span class="n">attr_method</span><span class="p">,</span>
+            <span class="n">tokenizer</span><span class="o">=</span><span class="n">tokenizer</span><span class="p">,</span>
+            <span class="n">attr_target</span><span class="o">=</span><span class="n">attr_target</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">provider</span> <span class="o">=</span> <span class="n">provider</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attr_method</span><span class="o">.</span><span class="n">forward_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remote_forward_func</span>
+
+    <span class="k">def</span> <span class="nf">_get_target_tokens</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inp</span><span class="p">:</span> <span class="n">InterpretableInput</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">skip_tokens</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">gen_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Get the target tokens for the remote LLM provider.</span>
+<span class="sd">        """</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">inp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">SUPPORTED_INPUTS</span>
+        <span class="p">),</span> <span class="sa">f</span><span class="s2">"RemoteLLMAttribution does not support input type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+
+        <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># generate when None with remote provider</span>
+            <span class="k">assert</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="p">,</span> <span class="s2">"generate"</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">callable</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">generate</span>
+            <span class="p">),</span> <span class="p">(</span>
+                <span class="s2">"The provider does not have generate function"</span>
+                <span class="s2">" for generating target sequence."</span>
+                <span class="s2">"Target must be given for attribution"</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">gen_args</span><span class="p">:</span>
+                <span class="n">gen_args</span> <span class="o">=</span> <span class="n">DEFAULT_GEN_ARGS</span>
+
+            <span class="n">model_inp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_remote_model_input</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">to_model_input</span><span class="p">())</span>
+            <span class="n">target_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">model_inp</span><span class="p">,</span> <span class="o">**</span><span class="n">gen_args</span><span class="p">)</span>
+            <span class="n">target_tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+                <span class="n">target_str</span><span class="p">,</span> <span class="n">return_tensors</span><span class="o">=</span><span class="s2">"pt"</span><span class="p">,</span> <span class="n">add_special_tokens</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">target_tokens</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_get_target_tokens</span><span class="p">(</span>
+                <span class="n">inp</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">skip_tokens</span><span class="p">,</span> <span class="n">gen_args</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">target_tokens</span>
+
+    <span class="k">def</span> <span class="nf">_format_remote_model_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_input</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Format the model input for the remote LLM provider.</span>
+<span class="sd">        Convert tokenized tensor to str</span>
+<span class="sd">        to make RemoteLLMAttribution work with model inputs of both</span>
+<span class="sd">        raw text and text token tensors</span>
+<span class="sd">        """</span>
+        <span class="c1"># return str input</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model_input</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">model_input</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">model_input</span>
+
+    <span class="k">def</span> <span class="nf">_remote_forward_func</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">perturbed_tensor</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span>
+        <span class="n">inp</span><span class="p">:</span> <span class="n">InterpretableInput</span><span class="p">,</span>
+        <span class="n">target_tokens</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">use_cached_outputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">_inspect_forward</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Forward function for the remote LLM provider.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the number of token logprobs doesn't match expected length</span>
+<span class="sd">        """</span>
+        <span class="n">perturbed_input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_remote_model_input</span><span class="p">(</span>
+            <span class="n">inp</span><span class="o">.</span><span class="n">to_model_input</span><span class="p">(</span><span class="n">perturbed_tensor</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">target_str</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">target_tokens</span><span class="p">)</span>
+
+        <span class="n">target_token_probs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">get_logprobs</span><span class="p">(</span>
+            <span class="n">input_prompt</span><span class="o">=</span><span class="n">perturbed_input</span><span class="p">,</span>
+            <span class="n">target_str</span><span class="o">=</span><span class="n">target_str</span><span class="p">,</span>
+            <span class="n">tokenizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">target_token_probs</span><span class="p">)</span> <span class="o">!=</span> <span class="n">target_tokens</span><span class="o">.</span><span class="n">size</span><span class="p">()[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Number of token logprobs from provider (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">target_token_probs</span><span class="p">)</span><span class="si">}</span><span class="s2">) "</span>
+                <span class="sa">f</span><span class="s2">"does not match expected target "</span>
+                <span class="sa">f</span><span class="s2">"token length (</span><span class="si">{</span><span class="n">target_tokens</span><span class="o">.</span><span class="n">size</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span>
+            <span class="p">)</span>
+
+        <span class="n">log_prob_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">,</span> <span class="n">target_token_probs</span><span class="p">))</span>
+
+        <span class="n">total_log_prob</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">log_prob_list</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># 1st element is the total prob, rest are the target tokens</span>
+        <span class="c1"># add a leading dim for batch even we only support single instance for now</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_per_token_attr</span><span class="p">:</span>
+            <span class="n">target_log_probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">total_log_prob</span><span class="p">,</span> <span class="o">*</span><span class="n">log_prob_list</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">target_log_probs</span> <span class="o">=</span> <span class="n">total_log_prob</span>
+        <span class="n">target_probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">target_log_probs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">_inspect_forward</span><span class="p">:</span>
+            <span class="n">prompt</span> <span class="o">=</span> <span class="n">perturbed_input</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">target_tokens</span><span class="p">)</span>
+
+            <span class="c1"># callback for externals to inspect (prompt, response, seq_prob)</span>
+            <span class="n">_inspect_forward</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">target_probs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="n">target_probs</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">attr_target</span> <span class="o">!=</span> <span class="s2">"log_prob"</span> <span class="k">else</span> <span class="n">target_log_probs</span>
 </pre></div>
 </div>
 </div>
