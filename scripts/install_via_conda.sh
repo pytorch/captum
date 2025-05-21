@@ -21,7 +21,7 @@ conda install -q -y pytorch cpuonly -c pytorch
 
 # install other deps
 conda install -q -y pytest ipywidgets ipython scikit-learn parameterized werkzeug
-conda install -q -y -c conda-forge matplotlib pytest-cov flask flask-compress conda-build
+conda install -q -y -c conda-forge matplotlib pytest-cov flask flask-compress conda-build openai
 conda install -q -y transformers
 
 # install captum
