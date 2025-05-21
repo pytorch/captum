@@ -29,8 +29,7 @@ Cache: Optional[Type[CacheLike]]
 DynamicCache: Optional[Type[DynamicCacheLike]]
 
 try:
-    # pyre-ignore[21]: Could not find a module corresponding to import `transformers`.
-    import transformers  # noqa: F401
+    import transformers  # noqa: F401  # type: ignore
 
     transformers_installed = True
 except ImportError:
@@ -38,9 +37,7 @@ except ImportError:
 
 if transformers_installed:
     try:
-        # pyre-ignore[21]: Could not find a module corresponding to import
-        # `transformers.cache_utils`.
-        from transformers.cache_utils import (  # noqa: F401
+        from transformers.cache_utils import (  # noqa: F401  # type: ignore
             Cache as _Cache,
             DynamicCache as _DynamicCache,
         )
@@ -99,9 +96,7 @@ def supports_caching(model: nn.Module) -> bool:
         return False
     # Cache may be optional or unsupported depending on model/version
     try:
-        # pyre-ignore[21]: Could not find a module corresponding to import
-        # `transformers.generation.utils`.
-        from transformers.generation.utils import GenerationMixin
+        from transformers.generation.utils import GenerationMixin  # type: ignore
     except ImportError:
         return False
     if not isinstance(model, GenerationMixin):
@@ -113,5 +108,4 @@ def supports_caching(model: nn.Module) -> bool:
         # Cache is mandatory
         return True
     # Fallback on _supports_cache_class attribute
-    # pyre-fixme[7]: Expected `bool` but got `Union[Module, Tensor]`.
-    return getattr(model, "_supports_cache_class", False)
+    return getattr(model, "_supports_cache_class", False)  # type: ignore
