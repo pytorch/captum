@@ -67,8 +67,8 @@ class Loss(ABC):
     def __rpow__(self, other: Union[int, float, "Loss"]) -> "CompositeLoss":
         return rmodule_op(self, other, operator.pow)
 
-    def __round__(self, ndigits: Optional[int] = None) -> "CompositeLoss":
-        return module_op(self, ndigits, torch.round)
+    def __round__(self, decimals: Optional[int] = 0) -> "CompositeLoss":
+        return module_op(self, decimals, lambda x, d: torch.round(x, decimals=d))
 
 
 def module_op(

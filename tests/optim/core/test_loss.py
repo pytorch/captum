@@ -102,6 +102,17 @@ class TestModuleOP(BaseTest):
             loss = opt_loss.ChannelActivation(model.layer, 0)
             opt_loss.module_op(loss, "string", operator.pow)  # type: ignore
 
+    def test_round(self) -> None:
+        round_value = 0
+        model = BasicModel_ConvNet_Optim()
+        loss = round(opt_loss.ChannelActivation(model.layer, 0), round_value)
+        expected = torch.round(
+            torch.tensor(CHANNEL_ACTIVATION_0_LOSS), decimals=round_value
+        )
+        self.assertAlmostEqual(
+            get_loss_value(model, loss).item(), expected.item(), places=6
+        )
+
 
 class TestRModuleOP(BaseTest):
     def test_module_op_loss_num_div(self) -> None:
