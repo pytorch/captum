@@ -449,8 +449,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        set necessary hooks on inputs there.</span>
 <span class="sd">        """</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-        <span class="c1"># pyre-fixme[16]: `Module` has no attribute `input`.</span>
-        <span class="n">module</span><span class="o">.</span><span class="n">input</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">input</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>  <span class="c1"># type: ignore</span>
 
     <span class="k">def</span> <span class="nf">_forward_hook</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -463,8 +462,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">        outputs of a neuron</span>
 <span class="sd">        """</span>
         <span class="n">outputs</span> <span class="o">=</span> <span class="n">_format_tensor_into_tuples</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
-        <span class="c1"># pyre-fixme[16]: `Module` has no attribute `output`.</span>
-        <span class="n">module</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>  <span class="c1"># type: ignore</span>
 
     <span class="k">def</span> <span class="nf">_backward_hook</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -578,9 +576,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">):</span>
             <span class="k">return</span> <span class="p">[</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">register_forward_pre_hook</span><span class="p">(</span><span class="n">pre_hook</span><span class="p">),</span>  <span class="c1"># type: ignore</span>
-                <span class="c1"># pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no</span>
-                <span class="c1">#  attribute `register_forward_hook`.</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="n">forward_hook</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="n">forward_hook</span><span class="p">),</span>  <span class="c1"># type: ignore</span>
             <span class="p">]</span>  <span class="c1"># type: ignore</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span>
