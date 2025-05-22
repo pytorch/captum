@@ -1,3 +1,5 @@
+# pyre-strict
+
 import logging
 import os
 from abc import ABC, abstractmethod
@@ -5,7 +7,7 @@ from typing import Any, List, Optional
 
 from captum._utils.typing import TokenizerLike
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class RemoteLLMProvider(ABC):
@@ -51,7 +53,9 @@ class RemoteLLMProvider(ABC):
 
 
 class VLLMProvider(RemoteLLMProvider):
-    def __init__(self, api_url: str, model_name: Optional[str] = None):
+    model_name: str
+
+    def __init__(self, api_url: str, model_name: Optional[str] = None) -> None:
         """
         Initialize a vLLM provider.
 
@@ -85,7 +89,7 @@ class VLLMProvider(RemoteLLMProvider):
         self.api_url = api_url
 
         try:
-            self.client = OpenAI(
+            self.client: OpenAI = OpenAI(
                 base_url=self.api_url, api_key=os.getenv("OPENAI_API_KEY", "EMPTY")
             )
 

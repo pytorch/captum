@@ -400,13 +400,13 @@ class BaseLLMAttribution(Attribution, ABC):
                 "The model does not have recognizable generate function."
                 "Target must be given for attribution"
             )
+            generate_func = cast(Callable[..., Tensor], self.model.generate)
 
             if not gen_args:
                 gen_args = DEFAULT_GEN_ARGS
 
             model_inp = self._format_model_input(inp.to_model_input())
-            # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
-            output_tokens = self.model.generate(model_inp, **gen_args)
+            output_tokens = generate_func(model_inp, **gen_args)
             target_tokens = output_tokens[0][model_inp.size(1) :]
         else:
             assert gen_args is None, "gen_args must be None when target is given"
@@ -562,16 +562,18 @@ class LLMAttribution(BaseLLMAttribution):
                         )
                     # nn.Module typing suggests non-base attributes are modules or
                     # tensors
-                    _update_model_kwargs_for_generation = (
-                        self.model._update_model_kwargs_for_generation
+                    _update_model_kwargs_for_generation = cast(
+                        Callable[..., Dict[str, object]],
+                        self.model._update_model_kwargs_for_generation,
                     )
-                    # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
                     model_kwargs = _update_model_kwargs_for_generation(  # type: ignore
                         outputs, model_kwargs
                     )
                 # nn.Module typing suggests non-base attributes are modules or tensors
-                prep_inputs_for_generation = self.model.prepare_inputs_for_generation
-                # pyre-fixme[29]: `Union[Module, Tensor]` is not a function.
+                prep_inputs_for_generation = cast(
+                    Callable[..., Dict[str, object]],
+                    self.model.prepare_inputs_for_generation,
+                )
                 model_inputs = prep_inputs_for_generation(  # type: ignore
                     model_inp, **model_kwargs
                 )

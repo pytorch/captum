@@ -409,8 +409,7 @@ class DeepLift(GradientAttribution):
         set necessary hooks on inputs there.
         """
         inputs = _format_tensor_into_tuples(inputs)
-        # pyre-fixme[16]: `Module` has no attribute `input`.
-        module.input = inputs[0].clone().detach()
+        module.input = inputs[0].clone().detach()  # type: ignore
 
     def _forward_hook(
         self,
@@ -423,8 +422,7 @@ class DeepLift(GradientAttribution):
         outputs of a neuron
         """
         outputs = _format_tensor_into_tuples(outputs)
-        # pyre-fixme[16]: `Module` has no attribute `output`.
-        module.output = outputs[0].clone().detach()
+        module.output = outputs[0].clone().detach()  # type: ignore
 
     def _backward_hook(
         self,
@@ -538,9 +536,7 @@ class DeepLift(GradientAttribution):
         ):
             return [
                 self.model.module.register_forward_pre_hook(pre_hook),  # type: ignore
-                # pyre-fixme[16]: Item `Tensor` of `Tensor | Module` has no
-                #  attribute `register_forward_hook`.
-                self.model.module.register_forward_hook(forward_hook),
+                self.model.module.register_forward_hook(forward_hook),  # type: ignore
             ]  # type: ignore
         else:
             return [
