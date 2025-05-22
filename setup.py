@@ -66,7 +66,7 @@ TEST_REQUIRES = ["pytest", "pytest-cov", "parameterized", "flask", "flask-compre
 REMOTE_REQUIRES = ["openai"]
 
 DEV_REQUIRES = (
-    INSIGHTS_REQUIRES
+    TUTORIALS_REQUIRES
     + TEST_REQUIRES
     + REMOTE_REQUIRES
     + [
@@ -76,6 +76,7 @@ DEV_REQUIRES = (
         "sphinx-autodoc-typehints",
         "sphinxcontrib-katex",
         "mypy>=0.760",
+        "pyre-check-nightly",
         "usort==1.0.2",
         "ufmt",
         "scikit-learn",

@@ -656,7 +656,12 @@ def _visualize_colored_graph(
         points = np.array([x_values, data[chan, :]]).T.reshape(-1, 1, 2)
         segments = np.concatenate([points[:-1], points[1:]], axis=1)
 
-        lc = LineCollection(segments, cmap=cmap, norm=cm_norm, **pyplot_kwargs)
+        lc = LineCollection(
+            segments,  # type: ignore
+            cmap=cmap,
+            norm=cm_norm,
+            **pyplot_kwargs,
+        )
         lc.set_array(norm_attr[chan, :])
         plt_axis_list[chan].add_collection(lc)
         plt_axis_list[chan].set_ylim(
