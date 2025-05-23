@@ -33,31 +33,32 @@ def vgg16(
 
     Args:
 
-        pretrained (bool, optional): If True, returns a model pre-trained on ImageNet.
-            Default: False
-        progress (bool, optional): If True, displays a progress bar of the download to
+        pretrained (bool, optional): If ``True``, returns a model pre-trained on ImageNet.
+            Default: ``False``
+        progress (bool, optional): If ``True``, displays a progress bar of the download to
             stderr
-            Default: True
+            Default: ``True``
         model_path (str, optional): Optional path for VGG model file.
-            Default: None
-        replace_relus_with_redirectedrelu (bool, optional): If True, return pretrained
-            model with Redirected ReLU in place of ReLU layers.
-            Default: *True* when pretrained is True otherwise *False*
-        use_linear_modules_only (bool, optional): If True, return pretrained
+            Default: ``None``
+        replace_relus_with_redirectedrelu (bool, optional): If ``True``, return
+            pretrained model with :class:`.RedirectedReLU` in place of
+            :class:`torch.nn.ReLU` layers.
+            Default: *``True``* when pretrained is True otherwise *``False``*
+        use_linear_modules_only (bool, optional): If ``True``, return pretrained
             model with all nonlinear layers replaced with linear equivalents.
-            Default: False
+            Default: ``False``
         out_features (int, optional): Number of output features in the model used for
             training.
-            Default: 1000
-        transform_input (bool, optional): If True, preprocesses the input according to
-            the method with which it was trained on ImageNet.
-            Default: True
+            Default: ``1000``
+        transform_input (bool, optional): If ``True``, preprocesses the input according
+            to the method with which it was trained on ImageNet.
+            Default: ``False``
         scale_input (bool, optional): If True and transform_input is True, scale the
             input range from [0, 1] to [0, 255] in the internal preprocessing.
-            Default: True
+            Default: ``True``
         classifier_logits (bool, optional): If True, adds the classifier component of
             the model.
-            Default: *False* when pretrained is True otherwise set to *True*.
+            Default: *``False``* when pretrained is True otherwise set to *``True``*
 
         Returns:
             model (nn.Module): A VGG-16 model instance.
@@ -112,25 +113,25 @@ class VGG(nn.Module):
 
             layers (list of int and str): A list of numbers corresponding to layer
                 channel sizes, along with the letter 'P' to denote pooling layers.
-                Default: VGG16_LAYERS
+                Default: ``VGG16_LAYERS``
             out_features (int, optional): Number of output features in the model used
                 for training.
-                Default: 1000
-            transform_input (bool, optional): If True, preprocesses the input according
-                to the method with which it was trained on ImageNet.
-                Default: True
-            scale_input (bool, optional): If True and transform_input is True, scale
+                Default: ``1000``
+            transform_input (bool, optional): If ``True``, preprocesses the input
+                according to the method with which it was trained on ImageNet.
+                Default: ``True``
+            scale_input (bool, optional): If ``True`` and ``transform_input`` is ``True``, scale
                 the input range from [0, 1] to [0, 255] in the internal preprocessing.
-                Default: True
-            replace_relus_with_redirectedrelu (bool, optional): If True, return
-                pretrained model with Redirected ReLU in place of ReLU layers.
-                Default: False
-            use_linear_modules_only (bool, optional): If True, return pretrained model
+                Default: ``True``
+            replace_relus_with_redirectedrelu (bool, optional): If ``True``, return
+                pretrained model with :class:`.RedirectedReLU` in place of ReLU layers.
+                Default: ``False``
+            use_linear_modules_only (bool, optional): If ``True``, return pretrained model
                 with all nonlinear layers replaced with linear equivalents.
-                Default: False
-            classifier_logits (bool, optional): If True, adds the classifier component
+                Default: ``False``
+            classifier_logits (bool, optional): If ``True``, adds the classifier component
                 of the model.
-                Default: False
+                Default: ``False``
         """
         super().__init__()
         self.classifier_logits = classifier_logits
@@ -214,10 +215,10 @@ def _buildSequential(
             locations to use for creating the feature model.
         activ (Type[nn.Module]): The type of activation layer to use for the feature
             model.
-            Default: nn.ReLU
+            Default: :class:`torch.nn.ReLU`
         p_layer (Type[nn.Module]): The type of pooling layer to use for the feature
             model.
-            Default: nn.MaxPool2d
+            Default: :class:`torch.nn.MaxPool2d`
 
     Returns:
         features (nn.Sequential): The full feature model for a VGG model.
