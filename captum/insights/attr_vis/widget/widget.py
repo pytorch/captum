@@ -23,7 +23,7 @@ class CaptumInsights(widgets.DOMWidget):
     _view_module_version = Unicode("^0.1.0").tag(sync=True)
     # pyre-fixme[4]: Attribute must be annotated.
     _model_module_version = Unicode("^0.1.0").tag(sync=True)
-
+    # pyre-fixme[4]: Attribute must be annotated.
     visualizer = Instance(klass=AttributionVisualizer)
 
     # pyre-fixme[4]: Attribute must be annotated.

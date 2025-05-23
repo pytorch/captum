@@ -182,8 +182,12 @@ class CAV:
                     np.dtype,
                 ]
                 if hasattr(np, "dtypes"):
-                    # pyre-ignore[16]: Module `numpy` has no attribute `dtypes`.
-                    safe_globals.extend([np.dtypes.UInt32DType, np.dtypes.Int32DType])
+                    safe_globals.extend(
+                        [
+                            np.dtypes.UInt32DType,  # type: ignore
+                            np.dtypes.Int32DType,  # type: ignore
+                        ]
+                    )
                 ctx = torch.serialization.safe_globals(safe_globals)
             else:
                 # safe globals not in existence in this version of torch yet. Use a

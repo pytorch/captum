@@ -63,9 +63,12 @@ TUTORIALS_REQUIRES = INSIGHTS_REQUIRES + ["torchtext", "torchvision"]
 
 TEST_REQUIRES = ["pytest", "pytest-cov", "parameterized", "flask", "flask-compress"]
 
+REMOTE_REQUIRES = ["openai"]
+
 DEV_REQUIRES = (
-    INSIGHTS_REQUIRES
+    TUTORIALS_REQUIRES
     + TEST_REQUIRES
+    + REMOTE_REQUIRES
     + [
         "black",
         "flake8",
@@ -73,6 +76,7 @@ DEV_REQUIRES = (
         "sphinx-autodoc-typehints",
         "sphinxcontrib-katex",
         "mypy>=0.760",
+        "pyre-check-nightly",
         "usort==1.0.2",
         "ufmt",
         "scikit-learn",
@@ -169,6 +173,7 @@ if __name__ == "__main__":
             "insights": INSIGHTS_REQUIRES,
             "test": TEST_REQUIRES,
             "tutorials": TUTORIALS_REQUIRES,
+            "remote": REMOTE_REQUIRES,
         },
         package_data={"captum": package_files},
         data_files=[

@@ -1,4 +1,4 @@
-name: Unit-tests for Pip install with mypy type checks
+name: Unit-tests for Pip install with type checks
 
 on:
   pull_request:
@@ -23,5 +23,6 @@ jobs:
         sudo chmod -R 777 .
         ./scripts/install_via_pip.sh ${{ matrix.pytorch_args }}
         ./scripts/run_mypy.sh
+        pyre check
         # Run Tests
         python3 -m pytest -ra --cov=. --cov-report term-missing
