@@ -3,11 +3,9 @@
 import warnings
 
 from abc import ABC
-
 from copy import copy
-
+from dataclasses import dataclass
 from textwrap import shorten
-
 from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Type, Union
 
 import matplotlib.colors as mcolors
@@ -45,6 +43,7 @@ DEFAULT_GEN_ARGS: Dict[str, Any] = {
 }
 
 
+@dataclass
 class LLMAttributionResult:
     """
     Data class for the return result of LLMAttribution,
@@ -52,17 +51,10 @@ class LLMAttributionResult:
     It also provides utilities to help present and plot the result in different forms.
     """
 
-    def __init__(
-        self,
-        seq_attr: Tensor,
-        token_attr: Optional[Tensor],
-        input_tokens: List[str],
-        output_tokens: List[str],
-    ) -> None:
-        self.seq_attr = seq_attr
-        self.token_attr = token_attr
-        self.input_tokens = input_tokens
-        self.output_tokens = output_tokens
+    seq_attr: Tensor
+    token_attr: Optional[Tensor]
+    input_tokens: List[str]
+    output_tokens: List[str]
 
     @property
     def seq_attr_dict(self) -> Dict[str, float]:
