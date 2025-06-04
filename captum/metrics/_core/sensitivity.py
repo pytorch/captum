@@ -62,8 +62,7 @@ def default_perturb_func(
 
 @log_usage(part_of_slo=True)
 def sensitivity_max(
-    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-    explanation_func: Callable,
+    explanation_func: Callable[..., TensorOrTupleOfTensorsGeneric],
     inputs: TensorOrTupleOfTensorsGeneric,
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     perturb_func: Callable = default_perturb_func,
@@ -232,8 +231,6 @@ def sensitivity_max(
     # pyre-fixme[33]: Given annotation cannot be `Any`.
     kwargs_copy: Any = None
 
-    # pyre-fixme[53]: Captured variable `bsz` is not annotated.
-    # pyre-fixme[53]: Captured variable `expl_inputs` is not annotated.
     def _next_sensitivity_max(current_n_perturb_samples: int) -> Tensor:
         inputs_perturbed = _generate_perturbations(current_n_perturb_samples)
 
@@ -281,8 +278,6 @@ def sensitivity_max(
             [
                 (expl_input - expl_perturbed).view(expl_perturbed.size(0), -1)
                 for expl_perturbed, expl_input in zip(
-                    # pyre-fixme[6]: For 1st argument expected
-                    #  `Iterable[Variable[_T1]]` but got `None`.
                     expl_perturbed_inputs,
                     expl_inputs_expanded,
                 )
@@ -318,10 +313,10 @@ def sensitivity_max(
 
     inputs = _format_tensor_into_tuples(inputs)  # type: ignore
 
-    bsz = inputs[0].size(0)
+    bsz: int = inputs[0].size(0)
 
     with torch.no_grad():
-        expl_inputs = explanation_func(inputs, **kwargs)
+        expl_inputs: TensorOrTupleOfTensorsGeneric = explanation_func(inputs, **kwargs)
         metrics_max = _divide_and_aggregate_metrics(
             cast(Tuple[Tensor, ...], inputs),
             n_perturb_samples,
