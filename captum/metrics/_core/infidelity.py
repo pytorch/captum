@@ -499,8 +499,6 @@ def _generate_perturbations(
     repeated instances per example.
     """
 
-    # pyre-fixme[53]: Captured variable `baselines_expanded` is not annotated.
-    # pyre-fixme[53]: Captured variable `inputs_expanded` is not annotated.
     def call_perturb_func() -> (
         Tuple[TensorOrTupleOfTensorsGeneric, TensorOrTupleOfTensorsGeneric]
     ):
@@ -520,12 +518,12 @@ def _generate_perturbations(
             else perturb_func(inputs_pert)
         )
 
-    inputs_expanded = tuple(
+    inputs_expanded: Tuple[Tensor, ...] = tuple(
         torch.repeat_interleave(input, current_n_perturb_samples, dim=0)
         for input in inputs
     )
 
-    baselines_expanded = baselines
+    baselines_expanded: BaselineTupleType = baselines
     if baselines is not None:
         baselines_expanded = tuple(
             (
