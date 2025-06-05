@@ -30,7 +30,7 @@ from captum._utils.common import (
     _run_forward,
 )
 from captum._utils.exceptions import FeatureAblationFutureError
-from captum._utils.progress import progress, SimpleProgress
+from captum._utils.progress import progress
 from captum._utils.typing import BaselineType, TargetType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import PerturbationAttribution
 from captum.attr._utils.common import (
@@ -41,10 +41,7 @@ from captum.log import log_usage
 from torch import dtype, Tensor
 from torch.futures import collect_all, Future
 
-try:
-    from tqdm.auto import tqdm
-except ImportError:
-    tqdm = None
+from tqdm.auto import tqdm
 
 IterableType = TypeVar("IterableType")
 
@@ -418,7 +415,7 @@ class FeatureAblation(PerturbationAttribution):
         formatted_feature_mask: Tuple[Tensor, ...],
         num_examples: int,
         perturbations_per_eval: int,
-        attr_progress: Optional[Union[SimpleProgress[IterableType], tqdm]],
+        attr_progress: Optional[tqdm],
         initial_eval: Tensor,
         flattened_initial_eval: Tensor,
         n_outputs: int,
@@ -500,7 +497,7 @@ class FeatureAblation(PerturbationAttribution):
         target: TargetType,
         baselines: BaselineType,
         formatted_feature_mask: Tuple[Tensor, ...],
-        attr_progress: Optional[Union[SimpleProgress[IterableType], tqdm]],
+        attr_progress: Optional[tqdm],
         flattened_initial_eval: Tensor,
         initial_eval: Tensor,
         n_outputs: int,
@@ -831,7 +828,7 @@ class FeatureAblation(PerturbationAttribution):
         baselines: BaselineType,
         formatted_feature_mask: Tuple[Tensor, ...],
         perturbations_per_eval: int,
-        attr_progress: Optional[Union[SimpleProgress[IterableType], tqdm]],
+        attr_progress: Optional[tqdm],
         processed_initial_eval_fut: Future[
             Tuple[List[Tensor], List[Tensor], Tensor, Tensor, int, dtype]
         ],
@@ -942,7 +939,7 @@ class FeatureAblation(PerturbationAttribution):
         target: TargetType,
         baselines: BaselineType,
         formatted_feature_mask: Tuple[Tensor, ...],
-        attr_progress: Optional[Union[SimpleProgress[IterableType], tqdm]],
+        attr_progress: Optional[tqdm],
         processed_initial_eval_fut: Future[
             Tuple[List[Tensor], List[Tensor], Tensor, Tensor, int, dtype]
         ],
