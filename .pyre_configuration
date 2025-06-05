@@ -13,5 +13,6 @@
   "source_directories": [
     "."
   ],
-  "strict": true
+  "strict": true,
+  "version": "0.0.101745838703"
 }

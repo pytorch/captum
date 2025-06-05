@@ -19,6 +19,8 @@ def assert_attribution_delta(
 ) -> None:
     if not is_layer:
         for input, attribution in zip(inputs, attributions):
+            # Pyre error in OSS environment only
+            # pyre-ignore[16]: `BaseTest` has no attribute `assertEqual`
             test.assertEqual(attribution.shape, input.shape)
     if isinstance(inputs, tuple):
         bsz = inputs[0].shape[0]
@@ -34,6 +36,8 @@ def assert_delta(
     test: BaseTest, delta: Tensor, delta_thresh: Union[Tensor, float] = 0.0006
 ) -> None:
     delta_condition = (delta.abs() < delta_thresh).all()
+    # Pyre error in OSS environment only
+    # pyre-ignore[16]: `BaseTest` has no attribute `assertTrue`
     test.assertTrue(
         delta_condition,
         "Sum of SHAP values {} does"
