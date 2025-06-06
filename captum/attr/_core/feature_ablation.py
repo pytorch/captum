@@ -1102,7 +1102,6 @@ class FeatureAblation(PerturbationAttribution):
                 "_fut_tuple_to_accumulate_fut_list_cross_tensor failed"
             ) from e
 
-    # pyre-fixme[3] return type must be annotated
     def _attribute_progress_setup(
         self,
         formatted_inputs: Tuple[Tensor, ...],
@@ -1110,7 +1109,7 @@ class FeatureAblation(PerturbationAttribution):
         enable_cross_tensor_attribution: bool,
         perturbations_per_eval: int,
         **kwargs: Any,
-    ):
+    ) -> tqdm:
         feature_counts = self._get_feature_counts(
             formatted_inputs, feature_mask, **kwargs
         )
