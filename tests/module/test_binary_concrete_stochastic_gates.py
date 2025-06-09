@@ -143,6 +143,8 @@ class TestBinaryConcreteStochasticGates(BaseTest):
         gated_input, reg = bcstg(input_tensor)
 
         expected_reg = 4.9903
+        expected_gated_input = []
+
         if self.testing_device == "cpu":
             expected_gated_input = [
                 [[0.0000, 0.0990], [0.0261, 0.2431], [0.0551, 0.3863]],
@@ -154,7 +156,6 @@ class TestBinaryConcreteStochasticGates(BaseTest):
                 [[0.1840, 0.1571], [0.4612, 0.7937], [0.2975, 0.7393]],
             ]
 
-        # pyre-fixme[61]: `expected_gated_input` is undefined, or not always defined.
         assertTensorAlmostEqual(self, gated_input, expected_gated_input, mode="max")
         assertTensorAlmostEqual(self, reg, expected_reg)
 
