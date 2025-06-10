@@ -181,6 +181,7 @@ def sgd_train_linear_model(
         `running_loss_window`)
     """
     converge_tracker = ConvergenceTracker(patience, threshold)
+    scheduler = None
 
     # get a point and construct the model
     data_iter = iter(dataloader)
@@ -242,7 +243,7 @@ def sgd_train_linear_model(
                 loss.backward()
                 optim.step()
                 model.zero_grad()
-                # pyre-fixme[61]: `scheduler` is undefined, or not always defined.
+
                 if scheduler:
                     scheduler.step(average_loss)
 
