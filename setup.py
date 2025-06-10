@@ -162,7 +162,7 @@ if __name__ == "__main__":
         ),
         install_requires=[
             "matplotlib",
-            "numpy<2.0",
+            "numpy",
             "packaging",
             "torch>=1.10",
             "tqdm",
