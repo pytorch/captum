@@ -3,7 +3,7 @@ channels:
   - pytorch
 dependencies:
   - numpy
-  - pytorch>=1.10
+  - pytorch>=2.3
   - matplotlib-base
   - tqdm
   - packaging
