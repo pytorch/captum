@@ -286,6 +286,8 @@ class TextTemplateInput(InterpretableInput):
         self.n_features = n_features
         self.n_itp_features = n_itp_features
 
+        # preserve template before modification
+        self.template = template
         if isinstance(template, str):
             template = template.format
         else:
