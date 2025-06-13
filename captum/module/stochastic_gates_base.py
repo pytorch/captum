@@ -30,6 +30,8 @@ class StochasticGatesBase(Module, ABC):
     extend this class and implement the distribution specific functions.
     """
 
+    mask: Optional[Tensor]
+
     def __init__(
         self,
         n_gates: int,
