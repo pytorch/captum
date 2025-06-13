@@ -78,9 +78,7 @@ class StochasticGatesBase(Module, ABC):
         self.reg_reduction = reg_reduction
 
         self.n_gates = n_gates
-        self.register_buffer(
-            "mask", mask.detach().clone() if mask is not None else None
-        )
+        self.mask = mask
         self.reg_weight = reg_weight
 
     def forward(self, input_tensor: Tensor) -> Tuple[Tensor, Tensor]:
