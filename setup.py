@@ -81,6 +81,7 @@ DEV_REQUIRES = (
         "ufmt",
         "scikit-learn",
         "annoy",
+        "click<8.2.0",
     ]
 )
 
