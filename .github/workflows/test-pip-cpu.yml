@@ -37,7 +37,7 @@ jobs:
           - pytorch_args: "-v 2.1.0"
             docker_img: "cimg/python:3.12"
       fail-fast: false
-    uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
+    uses: pytorch/test-infra/.github/workflows/linux_job_v2.yml@main
     with:
       runner: linux.12xlarge
       docker-image: ${{ matrix.docker_img }}
