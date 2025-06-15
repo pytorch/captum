@@ -548,8 +548,7 @@ class LimeBase(PerturbationAttribution):
 
         return generate_perturbation
 
-    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
-    def attribute_future(self) -> Callable:
+    def attribute_future(self) -> None:
         r"""
         This method is not implemented for LimeBase.
         """
@@ -1116,8 +1115,7 @@ class Lime(LimeBase):
             show_progress=show_progress,
         )
 
-    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
-    def attribute_future(self) -> Callable:
+    def attribute_future(self) -> None:
         return super().attribute_future()
 
     def _attribute_kwargs(  # type: ignore

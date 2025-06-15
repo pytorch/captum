@@ -55,7 +55,7 @@ class Test(BaseTest):
         input_x_grad = InputXGradient(model.forward)
         attributions = None
         with self.assertRaises(NotImplementedError):
-            attributions = input_x_grad.attribute_future()
+            attributions = input_x_grad.attribute_future()  # type: ignore
         self.assertEqual(attributions, None)
 
     def _input_x_gradient_base_assert(

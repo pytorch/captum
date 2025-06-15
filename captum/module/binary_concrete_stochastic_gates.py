@@ -134,8 +134,9 @@ class BinaryConcreteStochasticGates(StochasticGatesBase):
         self.eps = eps
 
         # pre-calculate the fixed term used in active prob
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.active_prob_offset = temperature * math.log(-lower_bound / upper_bound)
+        self.active_prob_offset: float = temperature * math.log(
+            -lower_bound / upper_bound
+        )
 
     def _sample_gate_values(self, batch_size: int) -> Tensor:
         """
