@@ -335,5 +335,5 @@ class Test(BaseTest):
         lrp = LRP(model)
         attributions = None
         with self.assertRaises(NotImplementedError):
-            attributions = lrp.attribute_future()
+            attributions = lrp.attribute_future()  # type: ignore
         self.assertEqual(attributions, None)
