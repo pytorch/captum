@@ -348,20 +348,21 @@ class DeepLift(GradientAttribution):
             self._remove_hooks(main_model_hooks)
 
         undo_gradient_requirements(inputs_tuple, gradient_mask)
-        # pyre-fixme[7]: Expected `Union[Tuple[Variable[TensorOrTupleOfTensorsGeneric...
-        return _compute_conv_delta_and_format_attrs(
-            self,
-            return_convergence_delta,
-            attributions,
-            baselines,
-            inputs_tuple,
-            additional_forward_args,
-            target,
-            is_inputs_tuple,
+        return cast(
+            TensorOrTupleOfTensorsGeneric,
+            _compute_conv_delta_and_format_attrs(
+                self,
+                return_convergence_delta,
+                attributions,
+                baselines,
+                inputs_tuple,
+                additional_forward_args,
+                target,
+                is_inputs_tuple,
+            ),
         )
 
-    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
-    def attribute_future(self) -> Callable:
+    def attribute_future(self) -> None:
         r"""
         This method is not implemented for DeepLift.
         """
@@ -831,11 +832,18 @@ class DeepLiftShap(DeepLift):
         )
 
         if return_convergence_delta:
-            # pyre-fixme[7]: Expected `Union[Tuple[Variable[TensorOrTupleOfTensorsGen...
-            return _format_output(is_inputs_tuple, attributions), delta
+            return (
+                cast(
+                    TensorOrTupleOfTensorsGeneric,
+                    _format_output(is_inputs_tuple, attributions),
+                ),
+                delta,
+            )
         else:
-            # pyre-fixme[7]: Expected `Union[Tuple[Variable[TensorOrTupleOfTensorsGen...
-            return _format_output(is_inputs_tuple, attributions)
+            return cast(
+                TensorOrTupleOfTensorsGeneric,
+                _format_output(is_inputs_tuple, attributions),
+            )
 
     def _expand_inputs_baselines_targets(
         self,
@@ -995,10 +1003,8 @@ def maxpool3d(
 
 def maxpool(
     module: Module,
-    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-    pool_func: Callable,
-    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-    unpool_func: Callable,
+    pool_func: Callable[..., Tuple[Tensor, Tensor]],
+    unpool_func: Callable[..., Tensor],
     inputs: Tensor,
     outputs: Tensor,
     grad_input: Tensor,
