@@ -22,8 +22,7 @@ class Model(ABC):
     def fit(
         self,
         train_data: DataLoader,
-        # pyre-fixme[2]: Parameter must be annotated.
-        **kwargs,
+        **kwargs: object,
     ) -> Optional[Dict[str, Union[int, float, Tensor]]]:
         r"""
         Override this method to actually train your model.
