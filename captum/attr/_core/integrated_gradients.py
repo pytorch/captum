@@ -2,7 +2,7 @@
 
 # pyre-strict
 import typing
-from typing import Callable, List, Literal, Optional, Tuple, Union
+from typing import Callable, cast, List, Literal, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -301,16 +301,18 @@ class IntegratedGradients(GradientAttribution):
                 additional_forward_args=additional_forward_args,
                 target=target,
             )
-            # pyre-fixme[7]: Expected `Union[Tuple[Variable[TensorOrTupleOfTensorsGen...
-            return _format_output(is_inputs_tuple, attributions), delta
-        # pyre-fixme[7]: Expected
-        #  `Union[Tuple[Variable[TensorOrTupleOfTensorsGeneric <: [Tensor,
-        #  typing.Tuple[Tensor, ...]]], Tensor], Variable[TensorOrTupleOfTensorsGeneric
-        #  <: [Tensor, typing.Tuple[Tensor, ...]]]]` but got `Tuple[Tensor, ...]`.
-        return _format_output(is_inputs_tuple, attributions)
+            return (
+                cast(
+                    TensorOrTupleOfTensorsGeneric,
+                    _format_output(is_inputs_tuple, attributions),
+                ),
+                delta,
+            )
+        return cast(
+            TensorOrTupleOfTensorsGeneric, _format_output(is_inputs_tuple, attributions)
+        )
 
-    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
-    def attribute_future(self) -> Callable:
+    def attribute_future(self) -> None:
         r"""
         This method is not implemented for IntegratedGradients.
         """
