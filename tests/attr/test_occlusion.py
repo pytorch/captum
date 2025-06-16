@@ -287,7 +287,7 @@ class Test(BaseTest):
         occ = Occlusion(net)
         attributions = None
         with self.assertRaises(NotImplementedError):
-            attributions = occ.attribute_future()
+            attributions = occ.attribute_future()  # type: ignore
         self.assertEqual(attributions, None)
 
     @unittest.mock.patch("sys.stderr", new_callable=io.StringIO)
