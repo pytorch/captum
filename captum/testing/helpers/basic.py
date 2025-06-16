@@ -5,20 +5,18 @@ import copy
 import random
 import unittest
 
-from typing import Callable, Generator
+from typing import Any, Callable, Generator, Tuple, TypeVar, Union
 
 import numpy as np
 import torch
 from captum.log import patch_methods
 from torch import Tensor
 
+ReturnType = TypeVar("ReturnType")
 
-# pyre-fixme[3]: Return type must be annotated.
-# pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
-def deep_copy_args(func: Callable):
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def copy_args(*args, **kwargs):
+
+def deep_copy_args(func: Callable[..., ReturnType]) -> Callable[..., ReturnType]:
+    def copy_args(*args: Any, **kwargs: Any) -> ReturnType:
         return func(
             *(copy.deepcopy(x) for x in args),
             **{k: copy.deepcopy(v) for k, v in kwargs.items()},
@@ -28,8 +26,7 @@ def deep_copy_args(func: Callable):
 
 
 def assertTensorAlmostEqual(
-    # pyre-fixme[2]: Parameter must be annotated.
-    test,
+    test: unittest.TestCase,
     # pyre-fixme[2]: Parameter must be annotated.
     actual,
     # pyre-fixme[2]: Parameter must be annotated.
@@ -75,8 +72,7 @@ def assertTensorAlmostEqual(
 
 
 def assertTensorTuplesAlmostEqual(
-    # pyre-fixme[2]: Parameter must be annotated.
-    test,
+    test: unittest.TestCase,
     # pyre-fixme[2]: Parameter must be annotated.
     actual,
     # pyre-fixme[2]: Parameter must be annotated.
@@ -95,15 +91,17 @@ def assertTensorTuplesAlmostEqual(
         assertTensorAlmostEqual(test, actual, expected, delta, mode)
 
 
-# pyre-fixme[2]: Parameter must be annotated.
-def assertAttributionComparision(test, attributions1, attributions2) -> None:
+def assertAttributionComparision(
+    test: unittest.TestCase,
+    attributions1: Union[Tensor, Tuple[Tensor, ...]],
+    attributions2: Union[Tensor, Tuple[Tensor, ...]],
+) -> None:
     for attribution1, attribution2 in zip(attributions1, attributions2):
         for attr_row1, attr_row2 in zip(attribution1, attribution2):
             assertTensorAlmostEqual(test, attr_row1, attr_row2, 0.05, "max")
 
 
-# pyre-fixme[2]: Parameter must be annotated.
-def assert_delta(test, delta) -> None:
+def assert_delta(test: unittest.TestCase, delta: Tensor) -> None:
     delta_condition = (delta.abs() < 0.00001).all()
     test.assertTrue(
         delta_condition,
