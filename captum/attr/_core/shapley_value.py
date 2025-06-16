@@ -5,7 +5,7 @@
 import itertools
 import math
 import warnings
-from typing import Callable, cast, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, cast, Iterable, List, Optional, Sequence, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -452,9 +452,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                 tensor_attrib_total / iter_count for tensor_attrib_total in total_attrib
             )
             formatted_attr = _format_output(is_inputs_tuple, attrib)
-        # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got
-        #  `Tuple[Tensor, ...]`.
-        return formatted_attr
+        return cast(TensorOrTupleOfTensorsGeneric, formatted_attr)
 
     def attribute_future(
         self,
@@ -595,9 +593,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                     )
                 )
             )
-        # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got
-        #  `Tuple[Tensor, ...]`.
-        return formatted_attr  # type: ignore
+        return cast(Future[TensorOrTupleOfTensorsGeneric], formatted_attr)
 
     def _initialEvalToPrevResultsTuple(
         self,
@@ -860,8 +856,7 @@ class ShapleyValueSampling(PerturbationAttribution):
         """return the total number of forward evaluations needed"""
         return math.ceil(total_features / perturbations_per_eval) * n_samples
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _strict_run_forward(self, *args, **kwargs) -> Tensor:
+    def _strict_run_forward(self, *args: Any, **kwargs: Any) -> Tensor:
         """
         A temp wrapper for global _run_forward util to force forward output
         type assertion & conversion.
@@ -886,8 +881,7 @@ class ShapleyValueSampling(PerturbationAttribution):
         # ref: https://github.com/pytorch/pytorch/pull/21215
         return torch.tensor([forward_output], dtype=cast(dtype, output_type))
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def _strict_run_forward_future(self, *args, **kwargs) -> Future[Tensor]:
+    def _strict_run_forward_future(self, *args: Any, **kwargs: Any) -> Future[Tensor]:
         """
         A temp wrapper for global _run_forward util to force
         forward outputtype assertion & conversion, but takes
