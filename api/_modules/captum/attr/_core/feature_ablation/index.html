@@ -437,10 +437,10 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">if</span> <span class="n">attr_progress</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">attr_progress</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-        <span class="c1"># pyre-fixme[7]: Expected `Variable[TensorOrTupleOfTensorsGeneric &lt;:</span>
-        <span class="c1"># [Tensor, typing.Tuple[Tensor, ...]]]`</span>
-        <span class="c1"># but got `Union[Tensor, typing.Tuple[Tensor, ...]]`.</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_result</span><span class="p">(</span><span class="n">total_attrib</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">is_inputs_tuple</span><span class="p">)</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span></div>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_generate_result</span><span class="p">(</span><span class="n">total_attrib</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">is_inputs_tuple</span><span class="p">),</span>
+        <span class="p">)</span></div>
 
 
     <span class="k">def</span> <span class="nf">_attribute_with_independent_feature_masks</span><span class="p">(</span>
@@ -666,8 +666,7 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">all_empty</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_examples_per_batch_grouped</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span>
                 <span class="n">formatted_inputs</span><span class="p">[</span><span class="n">tensor_idx</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="c1"># pyre-ignore[58]: Type has been narrowed to int</span>
-                <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_examples_per_batch_grouped</span>
+                <span class="o">&lt;</span> <span class="n">cast</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_examples_per_batch_grouped</span><span class="p">)</span>
             <span class="p">):</span>
                 <span class="n">should_skip</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="k">break</span>
@@ -828,35 +827,35 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="p">)</span>
 
             <span class="k">if</span> <span class="n">enable_cross_tensor_attribution</span><span class="p">:</span>
-                <span class="c1"># pyre-fixme[7]: Expected `Future[Variable[TensorOrTupleOfTensorsGeneric</span>
-                <span class="c1"># &lt;:[Tensor, typing.Tuple[Tensor, ...]]]]` but got</span>
-                <span class="c1"># `Future[Union[Tensor, typing.Tuple[Tensor, ...]]]`</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attribute_with_cross_tensor_feature_masks_future</span><span class="p">(</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
-                    <span class="n">formatted_inputs</span><span class="o">=</span><span class="n">formatted_inputs</span><span class="p">,</span>
-                    <span class="n">formatted_additional_forward_args</span><span class="o">=</span><span class="n">formatted_additional_forward_args</span><span class="p">,</span>
-                    <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
-                    <span class="n">baselines</span><span class="o">=</span><span class="n">baselines</span><span class="p">,</span>
-                    <span class="n">formatted_feature_mask</span><span class="o">=</span><span class="n">formatted_feature_mask</span><span class="p">,</span>
-                    <span class="n">attr_progress</span><span class="o">=</span><span class="n">attr_progress</span><span class="p">,</span>
-                    <span class="n">processed_initial_eval_fut</span><span class="o">=</span><span class="n">processed_initial_eval_fut</span><span class="p">,</span>
-                    <span class="n">is_inputs_tuple</span><span class="o">=</span><span class="n">is_inputs_tuple</span><span class="p">,</span>
-                    <span class="n">perturbations_per_eval</span><span class="o">=</span><span class="n">perturbations_per_eval</span><span class="p">,</span>
+                <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+                    <span class="n">Future</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">],</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_attribute_with_cross_tensor_feature_masks_future</span><span class="p">(</span>
+                        <span class="n">formatted_inputs</span><span class="o">=</span><span class="n">formatted_inputs</span><span class="p">,</span>
+                        <span class="n">formatted_additional_forward_args</span><span class="o">=</span><span class="n">formatted_additional_forward_args</span><span class="p">,</span>  <span class="c1"># noqa: E501 line too long</span>
+                        <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+                        <span class="n">baselines</span><span class="o">=</span><span class="n">baselines</span><span class="p">,</span>
+                        <span class="n">formatted_feature_mask</span><span class="o">=</span><span class="n">formatted_feature_mask</span><span class="p">,</span>
+                        <span class="n">attr_progress</span><span class="o">=</span><span class="n">attr_progress</span><span class="p">,</span>
+                        <span class="n">processed_initial_eval_fut</span><span class="o">=</span><span class="n">processed_initial_eval_fut</span><span class="p">,</span>
+                        <span class="n">is_inputs_tuple</span><span class="o">=</span><span class="n">is_inputs_tuple</span><span class="p">,</span>
+                        <span class="n">perturbations_per_eval</span><span class="o">=</span><span class="n">perturbations_per_eval</span><span class="p">,</span>
+                    <span class="p">),</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># pyre-fixme[7]: Expected `Future[Variable[TensorOrTupleOfTensorsGeneric</span>
-                <span class="c1"># &lt;:[Tensor, typing.Tuple[Tensor, ...]]]]` but got</span>
-                <span class="c1"># `Future[Union[Tensor, typing.Tuple[Tensor, ...]]]`</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attribute_with_independent_feature_masks_future</span><span class="p">(</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
-                    <span class="n">formatted_inputs</span><span class="p">,</span>
-                    <span class="n">formatted_additional_forward_args</span><span class="p">,</span>
-                    <span class="n">target</span><span class="p">,</span>
-                    <span class="n">baselines</span><span class="p">,</span>
-                    <span class="n">formatted_feature_mask</span><span class="p">,</span>
-                    <span class="n">perturbations_per_eval</span><span class="p">,</span>
-                    <span class="n">attr_progress</span><span class="p">,</span>
-                    <span class="n">processed_initial_eval_fut</span><span class="p">,</span>
-                    <span class="n">is_inputs_tuple</span><span class="p">,</span>
-                    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+                <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+                    <span class="n">Future</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">],</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_attribute_with_independent_feature_masks_future</span><span class="p">(</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
+                        <span class="n">formatted_inputs</span><span class="p">,</span>
+                        <span class="n">formatted_additional_forward_args</span><span class="p">,</span>
+                        <span class="n">target</span><span class="p">,</span>
+                        <span class="n">baselines</span><span class="p">,</span>
+                        <span class="n">formatted_feature_mask</span><span class="p">,</span>
+                        <span class="n">perturbations_per_eval</span><span class="p">,</span>
+                        <span class="n">attr_progress</span><span class="p">,</span>
+                        <span class="n">processed_initial_eval_fut</span><span class="p">,</span>
+                        <span class="n">is_inputs_tuple</span><span class="p">,</span>
+                        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+                    <span class="p">),</span>
                 <span class="p">)</span></div>
 
 

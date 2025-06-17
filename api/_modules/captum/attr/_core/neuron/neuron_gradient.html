@@ -33,7 +33,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 
 <span class="c1"># pyre-strict</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_format_additional_forward_args</span><span class="p">,</span>
@@ -220,10 +220,9 @@ src="/_sphinx/documentation_options.js"></script>
 
         <span class="n">undo_gradient_requirements</span><span class="p">(</span><span class="n">inputs_tuple</span><span class="p">,</span> <span class="n">gradient_mask</span><span class="p">)</span>
 
-        <span class="c1"># pyre-fixme[7]: Expected `Variable[TensorOrTupleOfTensorsGeneric &lt;:</span>
-        <span class="c1"># [Tensor, typing.Tuple[Tensor, ...]]]` but got `Union[Tensor,</span>
-        <span class="c1"># typing.Tuple[Tensor, ...]]`.</span>
-        <span class="k">return</span> <span class="n">_format_output</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">input_grads</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span>
+            <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span> <span class="n">_format_output</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">input_grads</span><span class="p">)</span>
+        <span class="p">)</span></div>
 </div>
 
 </pre></div>
