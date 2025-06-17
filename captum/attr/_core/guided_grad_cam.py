@@ -2,7 +2,7 @@
 
 # pyre-strict
 import warnings
-from typing import List, Optional, Union
+from typing import cast, List, Optional, Union
 
 import torch
 from captum._utils.common import _format_output, _format_tensor_into_tuples, _is_tuple
@@ -223,6 +223,7 @@ class GuidedGradCam(GradientAttribution):
                 )
                 output_attr.append(torch.empty(0))
 
-        # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got
-        #  `Tuple[Tensor, ...]`.
-        return _format_output(is_inputs_tuple, tuple(output_attr))
+        return cast(
+            TensorOrTupleOfTensorsGeneric,
+            _format_output(is_inputs_tuple, tuple(output_attr)),
+        )
