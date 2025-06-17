@@ -2,7 +2,7 @@
 
 # pyre-strict
 import warnings
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -328,9 +328,9 @@ class NeuronConductance(NeuronAttribution, GradientAttribution):
                 attribute_to_neuron_input=attribute_to_neuron_input,
                 grad_kwargs=grad_kwargs,
             )
-        # pyre-fixme[7]: Expected `TensorOrTupleOfTensorsGeneric` but got
-        #  `Tuple[Tensor, ...]`.
-        return _format_output(is_inputs_tuple, attrs)
+        return cast(
+            TensorOrTupleOfTensorsGeneric, _format_output(is_inputs_tuple, attrs)
+        )
 
     def _attribute(
         self,
