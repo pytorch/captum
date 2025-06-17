@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # pyre-strict
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Callable, cast, List, Optional, Tuple, Union
 
 from captum._utils.common import (
     _format_additional_forward_args,
@@ -184,7 +184,6 @@ class NeuronGradient(NeuronAttribution, GradientAttribution):
 
         undo_gradient_requirements(inputs_tuple, gradient_mask)
 
-        # pyre-fixme[7]: Expected `Variable[TensorOrTupleOfTensorsGeneric <:
-        # [Tensor, typing.Tuple[Tensor, ...]]]` but got `Union[Tensor,
-        # typing.Tuple[Tensor, ...]]`.
-        return _format_output(is_inputs_tuple, input_grads)
+        return cast(
+            TensorOrTupleOfTensorsGeneric, _format_output(is_inputs_tuple, input_grads)
+        )
