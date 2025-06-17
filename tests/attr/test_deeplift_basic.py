@@ -310,7 +310,7 @@ class Test(BaseTest):
         dl = DeepLift(model, multiply_by_inputs=False)
         attributions = None
         with self.assertRaises(NotImplementedError):
-            attributions = dl.attribute_future()
+            attributions = dl.attribute_future()  # type: ignore
         self.assertEqual(attributions, None)
 
     def _deeplift_assert(
