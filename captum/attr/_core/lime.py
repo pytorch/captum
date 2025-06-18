@@ -590,16 +590,19 @@ class LimeBase(PerturbationAttribution):
 # for Lime child implementation.
 
 
-# pyre-fixme[3]: Return type must be annotated.
-# pyre-fixme[2]: Parameter must be annotated.
-def default_from_interp_rep_transform(curr_sample, original_inputs, **kwargs):
+def default_from_interp_rep_transform(
+    curr_sample: Tensor,
+    original_inputs: TensorOrTupleOfTensorsGeneric,
+    **kwargs: Any,
+) -> TensorOrTupleOfTensorsGeneric:
+
     assert (
         "feature_mask" in kwargs
     ), "Must provide feature_mask to use default interpretable representation transform"
     assert (
         "baselines" in kwargs
     ), "Must provide baselines to use default interpretable representation transform"
-    feature_mask = kwargs["feature_mask"]
+    feature_mask: TensorOrTupleOfTensorsGeneric = kwargs["feature_mask"]
     if isinstance(feature_mask, Tensor):
         binary_mask = curr_sample[0][feature_mask].bool()
         return (
@@ -610,10 +613,15 @@ def default_from_interp_rep_transform(curr_sample, original_inputs, **kwargs):
         binary_mask = tuple(
             curr_sample[0][feature_mask[j]].bool() for j in range(len(feature_mask))
         )
-        return tuple(
-            binary_mask[j].to(original_inputs[j].dtype) * original_inputs[j]
-            + (~binary_mask[j]).to(original_inputs[j].dtype) * kwargs["baselines"][j]
-            for j in range(len(feature_mask))
+
+        return cast(
+            TensorOrTupleOfTensorsGeneric,
+            tuple(
+                binary_mask[j].to(original_inputs[j].dtype) * original_inputs[j]
+                + (~binary_mask[j]).to(original_inputs[j].dtype)
+                * kwargs["baselines"][j]
+                for j in range(len(feature_mask))
+            ),
         )
 
 
@@ -652,9 +660,12 @@ def get_exp_kernel_similarity_function(
             similarity_fn for Lime or LimeBase.
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def default_exp_kernel(original_inp, perturbed_inp, __, **kwargs):
+    def default_exp_kernel(
+        original_inp: TensorOrTupleOfTensorsGeneric,
+        perturbed_inp: TensorOrTupleOfTensorsGeneric,
+        __: Any,
+        **kwargs: Any,
+    ) -> float:
         flattened_original_inp = _flatten_tensor_or_tuple(original_inp).float()
         flattened_perturbed_inp = _flatten_tensor_or_tuple(perturbed_inp).float()
         if distance_mode == "cosine":
