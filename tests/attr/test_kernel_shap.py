@@ -337,7 +337,7 @@ class Test(BaseTest):
         kernel_shap = KernelShap(net)
         attributions = None
         with self.assertRaises(NotImplementedError):
-            attributions = kernel_shap.attribute_future()
+            attributions = kernel_shap.attribute_future()  # type: ignore
         self.assertEqual(attributions, None)
 
     def _multi_input_scalar_kernel_shap_assert(self, func: Callable) -> None:

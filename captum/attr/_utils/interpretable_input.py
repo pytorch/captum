@@ -25,9 +25,8 @@ def _scatter_itp_attr_by_mask(
 
     # input_shape in shape(batch_size, *inp_feature_dims)
     # attribute in shape(*output_dims, *inp_feature_dims)
-    # pyre-fixme[60]: Concatenation not yet support for multiple variadic tuples:
-    #  `*output_dims, *input_shape[slice(1, None, None)]`.
-    attr_shape = (*output_dims, *input_shape[1:])
+    # Current limitation in pyre with multiple variadic tuples
+    attr_shape = (*output_dims, *input_shape[1:])  # pyre-ignore[60]
 
     expanded_feature_indices = mask.expand(attr_shape)
 
@@ -39,12 +38,17 @@ def _scatter_itp_attr_by_mask(
         # (*output_dims, 1..., 1, n_itp_features)
         # then broadcast to (*output_dims, *inp.shape[1:-1], n_itp_features)
         n_extra_dims = len(extra_inp_dims)
-        # pyre-fixme[60]: Concatenation not yet support for multiple variadic
-        #  tuples: `*output_dims, *(1).__mul__(n_extra_dims)`.
-        unsqueezed_shape = (*output_dims, *(1,) * n_extra_dims, n_itp_features)
-        # pyre-fixme[60]: Concatenation not yet support for multiple variadic
-        #  tuples: `*output_dims, *extra_inp_dims`.
-        expanded_shape = (*output_dims, *extra_inp_dims, n_itp_features)
+        # Current limitation in pyre with multiple variadic tuples
+        unsqueezed_shape = (  # pyre-ignore[60]
+            *output_dims,
+            *(1,) * n_extra_dims,
+            n_itp_features,
+        )
+        expanded_shape = (  # pyre-ignore[60]
+            *output_dims,
+            *extra_inp_dims,
+            n_itp_features,
+        )
         expanded_itp_attr = itp_attr.reshape(unsqueezed_shape).expand(expanded_shape)
     else:
         expanded_itp_attr = itp_attr
@@ -286,6 +290,8 @@ class TextTemplateInput(InterpretableInput):
         self.n_features = n_features
         self.n_itp_features = n_itp_features
 
+        # preserve template before modification
+        self.template = template
         if isinstance(template, str):
             template = template.format
         else:

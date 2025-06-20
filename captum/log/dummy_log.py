@@ -3,6 +3,7 @@
 # pyre-strict
 
 from functools import wraps
+from inspect import iscoroutinefunction
 from types import TracebackType
 from typing import Any, List, Optional, Union
 
@@ -29,16 +30,30 @@ class TimedLog:
 
 # pyre-fixme[3]: Return type must be annotated.
 def log_usage(*log_args: Any, **log_kwargs: Any):
+
     # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     def _log_usage(func):
-        @wraps(func)
-        # pyre-fixme[53]: Captured variable `func` is not annotated.
-        # pyre-fixme[3]: Return type must be annotated.
-        def wrapper(*args: Any, **kwargs: Any):
-            return func(*args, **kwargs)
+        if iscoroutinefunction(func):
 
-        return wrapper
+            @wraps(func)
+            # pyre-fixme[53]: Captured variable `func` is not annotated.
+            # pyre-fixme[3]: Return type must be annotated.
+            # pyre-fixme[2]: Parameter must be annotated.
+            async def async_wrapper(*args, **kwargs):
+                return await func(*args, **kwargs)
+
+            return async_wrapper
+        else:
+
+            @wraps(func)
+            # pyre-fixme[53]: Captured variable `func` is not annotated.
+            # pyre-fixme[3]: Return type must be annotated.
+            # pyre-fixme[2]: Parameter must be annotated.
+            def wrapper(*args, **kwargs):
+                return func(*args, **kwargs)
+
+            return wrapper
 
     return _log_usage
 

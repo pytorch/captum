@@ -4,7 +4,7 @@
 
 import typing
 from collections import defaultdict
-from typing import Any, Callable, cast, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, cast, Dict, List, Literal, Optional, Tuple, Union
 
 import torch.nn as nn
 from captum._utils.common import (
@@ -230,16 +230,17 @@ class LRP(GradientAttribution):
         undo_gradient_requirements(input_tuple, gradient_mask)
 
         if return_convergence_delta:
-            # pyre-fixme[7]: Expected `Union[Tuple[Variable[TensorOrTupleOfTensorsGen...
             return (
-                _format_output(is_inputs_tuple, relevances),
+                cast(
+                    TensorOrTupleOfTensorsGeneric,
+                    _format_output(is_inputs_tuple, relevances),
+                ),
                 self.compute_convergence_delta(relevances, output),
             )
         else:
             return _format_output(is_inputs_tuple, relevances)  # type: ignore
 
-    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
-    def attribute_future(self) -> Callable:
+    def attribute_future(self) -> None:
         r"""
         This method is not implemented for LRP.
         """

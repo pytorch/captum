@@ -482,7 +482,7 @@ class Test(BaseTest):
         )
         attributions = None
         with self.assertRaises(NotImplementedError):
-            attributions = lime.attribute_future()
+            attributions = lime.attribute_future()  # type: ignore
         self.assertEqual(attributions, None)
 
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.

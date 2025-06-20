@@ -269,8 +269,7 @@ class Occlusion(FeatureAblation):
             show_progress=show_progress,
         )
 
-    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
-    def attribute_future(self) -> Callable:
+    def attribute_future(self) -> None:
         r"""
         This method is not implemented for Occlusion.
         """

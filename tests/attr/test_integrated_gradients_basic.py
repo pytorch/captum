@@ -161,7 +161,7 @@ class Test(BaseTest):
         ig = IntegratedGradients(model, multiply_by_inputs=True)
         attributions = None
         with self.assertRaises(NotImplementedError):
-            attributions = ig.attribute_future()
+            attributions = ig.attribute_future()  # type: ignore
         self.assertEqual(attributions, None)
 
     def _assert_multi_variable(

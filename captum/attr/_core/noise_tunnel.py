@@ -2,7 +2,7 @@
 
 # pyre-strict
 from enum import Enum
-from typing import Any, Callable, cast, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, cast, Dict, List, Optional, Sequence, Tuple, Union
 
 import torch
 from captum._utils.common import (
@@ -14,7 +14,6 @@ from captum._utils.common import (
     _format_tensor_into_tuples,
     _is_tuple,
 )
-from captum._utils.typing import TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.attribution import Attribution, GradientAttribution
 from captum.attr._utils.common import _validate_noise_tunnel_type
 from captum.log import log_usage
@@ -91,12 +90,10 @@ class NoiseTunnel(Attribution):
         draw_baseline_from_distrib: bool = False,
         **kwargs: Any,
     ) -> Union[
-        Union[
-            Tensor,
-            Tuple[Tensor, Tensor],
-            Tuple[Tensor, ...],
-            Tuple[Tuple[Tensor, ...], Tensor],
-        ]
+        Tensor,
+        Tuple[Tensor, Tensor],
+        Tuple[Tensor, ...],
+        Tuple[Tuple[Tensor, ...], Tensor],
     ]:
         r"""
         Args:
@@ -298,8 +295,7 @@ class NoiseTunnel(Attribution):
             delta,
         )
 
-    # pyre-fixme[24] Generic type `Callable` expects 2 type parameters.
-    def attribute_future(self) -> Callable:
+    def attribute_future(self) -> None:
         r"""
         This method is not implemented for NoiseTunnel.
         """
@@ -490,11 +486,11 @@ class NoiseTunnel(Attribution):
         is_attrib_tuple: bool,
         return_convergence_delta: bool,
         delta: Union[None, Tensor],
-        # pyre-fixme[34]: `Variable[TensorOrTupleOfTensorsGeneric <:
-        #  [torch._tensor.Tensor, typing.Tuple[torch._tensor.Tensor, ...]]]`
-        #  isn't present in the function's parameters.
     ) -> Union[
-        TensorOrTupleOfTensorsGeneric, Tuple[TensorOrTupleOfTensorsGeneric, Tensor]
+        Tensor,
+        Tuple[Tensor, Tensor],
+        Tuple[Tensor, ...],
+        Tuple[Tuple[Tensor, ...], Tensor],
     ]:
         attributions_tuple = _format_output(is_attrib_tuple, attributions)
 
@@ -503,17 +499,15 @@ class NoiseTunnel(Attribution):
             if self.is_delta_supported and return_convergence_delta
             else attributions_tuple
         )
-        ret = cast(
-            # pyre-fixme[34]: `Variable[TensorOrTupleOfTensorsGeneric <:
-            #  [torch._tensor.Tensor, typing.Tuple[torch._tensor.Tensor, ...]]]`
-            # isn't present in the function's parameters.
+        return cast(
             Union[
-                TensorOrTupleOfTensorsGeneric,
-                Tuple[TensorOrTupleOfTensorsGeneric, Tensor],
+                Tensor,
+                Tuple[Tensor, Tensor],
+                Tuple[Tensor, ...],
+                Tuple[Tuple[Tensor, ...], Tensor],
             ],
             ret,
         )
-        return ret
 
     def has_convergence_delta(self) -> bool:
         return self.is_delta_supported

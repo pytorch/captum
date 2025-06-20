@@ -91,7 +91,7 @@ def _is_tuple(inputs: Tensor) -> Literal[False]: ...
 
 @typing.overload
 def _is_tuple(
-    inputs: TensorOrTupleOfTensorsGeneric,  # type: ignore
+    inputs: Union[Tensor, Tuple[Tensor, ...]],
 ) -> bool: ...
 
 
@@ -373,8 +373,6 @@ def _expand_target(
 def _expand_feature_mask(
     feature_mask: Union[Tensor, Tuple[Tensor, ...]], n_samples: int
 ) -> Tuple[Tensor, ...]:
-    # pyre-fixme[6]: For 1st argument expected `Tensor` but got `Union[Tensor,
-    #  typing.Tuple[Tensor, ...]]`.
     is_feature_mask_tuple = _is_tuple(feature_mask)
     feature_mask = _format_tensor_into_tuples(feature_mask)
     feature_mask_new = tuple(
