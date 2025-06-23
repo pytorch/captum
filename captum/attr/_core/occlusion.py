@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # pyre-strict
-from typing import Any, Callable, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -267,6 +267,7 @@ class Occlusion(FeatureAblation):
             shift_counts=tuple(shift_counts),
             strides=strides,
             show_progress=show_progress,
+            enable_cross_tensor_attribution=True,
         )
 
     def attribute_future(self) -> None:
@@ -310,6 +311,7 @@ class Occlusion(FeatureAblation):
                     kwargs["sliding_window_tensors"],
                     kwargs["strides"],
                     kwargs["shift_counts"],
+                    is_expanded_input=True,
                 )
                 for j in range(start_feature, end_feature)
             ],
@@ -327,11 +329,12 @@ class Occlusion(FeatureAblation):
 
     def _occlusion_mask(
         self,
-        expanded_input: Tensor,
+        input: Tensor,
         ablated_feature_num: int,
         sliding_window_tsr: Tensor,
         strides: Union[int, Tuple[int, ...]],
         shift_counts: Tuple[int, ...],
+        is_expanded_input: bool,
     ) -> Tensor:
         """
         This constructs the current occlusion mask, which is the appropriate
@@ -365,8 +368,9 @@ class Occlusion(FeatureAblation):
             current_index.append((remaining_total % shift_count) * stride)
             remaining_total = remaining_total // shift_count
 
+        dim = 2 if is_expanded_input else 1
         remaining_padding = np.subtract(
-            expanded_input.shape[2:], np.add(current_index, sliding_window_tsr.shape)
+            input.shape[dim:], np.add(current_index, sliding_window_tsr.shape)
         )
         pad_values = [
             val for pair in zip(remaining_padding, current_index) for val in pair
@@ -391,3 +395,74 @@ class Occlusion(FeatureAblation):
     ) -> Tuple[int, ...]:
         """return the numbers of possible input features"""
         return tuple(np.prod(counts).astype(int) for counts in kwargs["shift_counts"])
+
+    def _get_feature_idx_to_tensor_idx(
+        self, formatted_feature_mask: Tuple[Tensor, ...], **kwargs: Any
+    ) -> Dict[int, List[int]]:
+        feature_idx_to_tensor_idx = {}
+        curr_feature_idx = 0
+        for i, shift_count in enumerate(kwargs["shift_counts"]):
+            num_features = int(np.prod(shift_count))
+            for _ in range(num_features):
+                feature_idx_to_tensor_idx[curr_feature_idx] = [i]
+                curr_feature_idx += 1
+        return feature_idx_to_tensor_idx
+
+    def _construct_ablated_input_across_tensors(
+        self,
+        inputs: Tuple[Tensor, ...],
+        input_mask: Tuple[Tensor, ...],
+        baselines: BaselineType,
+        feature_idxs: List[int],
+        feature_idx_to_tensor_idx: Dict[int, List[int]],
+        current_num_ablated_features: int,
+        **kwargs: Any,
+    ) -> Tuple[Tuple[Tensor, ...], Tuple[Optional[Tensor], ...]]:
+        ablated_inputs = []
+        current_masks: List[Optional[Tensor]] = []
+        tensor_idxs = {
+            tensor_idx
+            for sublist in (
+                feature_idx_to_tensor_idx[feature_idx] for feature_idx in feature_idxs
+            )
+            for tensor_idx in sublist
+        }
+
+        for i, input_tensor in enumerate(inputs):
+            if i not in tensor_idxs:
+                ablated_inputs.append(input_tensor)
+                current_masks.append(None)
+                continue
+            tensor_mask: List[Tensor] = []
+            ablated_input = input_tensor.clone()
+            baseline = baselines[i] if isinstance(baselines, tuple) else baselines
+            for j, feature_idx in enumerate(feature_idxs):
+                original_input_size = (
+                    input_tensor.shape[0] // current_num_ablated_features
+                )
+                start_idx = j * original_input_size
+                end_idx = (j + 1) * original_input_size
+
+                no_mask = feature_idx_to_tensor_idx[feature_idx][0] != i
+                if j > 0 and no_mask:
+                    tensor_mask.append(torch.zeros_like(tensor_mask[-1]))
+                    continue
+                mask = self._occlusion_mask(
+                    ablated_input,
+                    feature_idx,
+                    kwargs["sliding_window_tensors"][i],
+                    kwargs["strides"][i],
+                    kwargs["shift_counts"][i],
+                    is_expanded_input=False,
+                )
+                if no_mask:
+                    tensor_mask.append(torch.zeros_like(mask))
+                    continue
+                tensor_mask.append(mask)
+                assert baseline is not None, "baseline must be provided"
+                ablated_input[start_idx:end_idx] = input_tensor[start_idx:end_idx] * (
+                    torch.ones(1, dtype=torch.long, device=input_tensor.device) - mask
+                ) + (baseline * mask.to(input_tensor.dtype))
+            current_masks.append(torch.stack(tensor_mask, dim=0))
+            ablated_inputs.append(ablated_input)
+        return tuple(ablated_inputs), tuple(current_masks)
