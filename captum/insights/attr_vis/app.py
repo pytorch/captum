@@ -82,16 +82,10 @@ def _get_context() -> str:
     return _CONTEXT_NONE
 
 
-# pyre-fixme[4]: Attribute annotation cannot be `Any`.
-# pyre-fixme[2]: Parameter annotation cannot be `Any`.
 VisualizationOutput = namedtuple(
     "VisualizationOutput", "feature_outputs actual predicted active_index model_index"
 )
-# pyre-fixme[4]: Attribute annotation cannot be `Any`.
-# pyre-fixme[2]: Parameter annotation cannot be `Any`.
 Contribution = namedtuple("Contribution", "name percent")
-# pyre-fixme[4]: Attribute annotation cannot be `Any`.
-# pyre-fixme[2]: Parameter annotation cannot be `Any`.
 SampleCache = namedtuple("SampleCache", "inputs additional_forward_args label")
 
 

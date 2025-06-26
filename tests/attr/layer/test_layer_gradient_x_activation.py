@@ -160,8 +160,6 @@ class Test(BaseTest):
         # pyre-fixme[24]: Generic type `list` expects 1 type parameter, use
         # `typing.List[<element type>]` to avoid runtime subscripting errors.
         expected_activation: Union[List, Tuple[List[List[float]], ...]],
-        # pyre-fixme[2]: Parameter `additional_input` has type `None`
-        # but type `Any` is specified.
         additional_input: Any = None,
     ) -> None:
         layer_act = LayerGradientXActivation(model, target_layer)

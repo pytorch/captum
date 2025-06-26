@@ -203,12 +203,9 @@ class MinParamPerturbation:
                 current_count += batch_size
             return None
 
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def _apply_attack(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         inputs: Any,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         preproc_input: Any,
         attack_kwargs: Optional[Dict[str, Any]],
         param: Union[int, float],
@@ -229,16 +226,12 @@ class MinParamPerturbation:
             preproc_attacked_inp = attacked_inp
         return preproc_attacked_inp, attacked_inp
 
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def _linear_search(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         inputs: Any,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         preproc_input: Any,
         attack_kwargs: Optional[Dict[str, Any]],
         additional_forward_args: Optional[Tuple[object, ...]],
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         expanded_additional_args: Any,
         correct_fn_kwargs: Optional[Dict[str, Any]],
         target: TargetType,
@@ -290,16 +283,12 @@ class MinParamPerturbation:
                 )
         return None, None
 
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def _binary_search(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         inputs: Any,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         preproc_input: Any,
         attack_kwargs: Optional[Dict[str, Any]],
         additional_forward_args: Optional[Tuple[object, ...]],
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         expanded_additional_args: Any,
         correct_fn_kwargs: Optional[Dict[str, Any]],
         target: TargetType,
@@ -378,10 +367,8 @@ class MinParamPerturbation:
         return min_input, min_so_far
 
     @log_usage(part_of_slo=False)
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def evaluate(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         inputs: Any,
         # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
         additional_forward_args: Optional[Tuple] = None,

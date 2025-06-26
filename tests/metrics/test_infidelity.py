@@ -451,8 +451,6 @@ class Test(BaseTest):
         model: Module,
         inputs: TensorOrTupleOfTensorsGeneric,
         expected: Tensor,
-        # pyre-fixme[2]: Parameter `additional_args` has type `None`
-        # but type `Any` is specified.
         additional_args: Optional[Any] = None,
         target: Optional[TargetType] = None,
         n_perturb_samples: Optional[int] = 10,
@@ -484,8 +482,6 @@ class Test(BaseTest):
         attributions: TensorOrTupleOfTensorsGeneric,
         inputs: TensorOrTupleOfTensorsGeneric,
         expected: Tensor,
-        # pyre-fixme[2]: Parameter `additional_args` has type `None`
-        # but type `Any` is specified.
         additional_args: Optional[Any] = None,
         baselines: Optional[BaselineType] = None,
         n_perturb_samples: Optional[int] = 10,
