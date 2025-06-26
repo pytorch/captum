@@ -165,7 +165,7 @@ if __name__ == "__main__":
             "matplotlib",
             "numpy<2.0",
             "packaging",
-            "torch>=1.10",
+            "torch>=1.13",
             "tqdm",
         ],
         packages=find_packages(exclude=("tests", "tests.*")),
