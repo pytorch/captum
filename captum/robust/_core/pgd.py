@@ -78,7 +78,6 @@ class PGD(Perturbation):
         radius: float,
         step_size: float,
         step_num: int,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         target: Any,
         additional_forward_args: Optional[object] = None,
         targeted: bool = False,

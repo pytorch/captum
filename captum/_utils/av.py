@@ -400,8 +400,6 @@ class AV:
             AV.save(path, model_id, identifier, unsaved_layers, new_activations, num_id)
 
     @staticmethod
-    # pyre-fixme[3]: Return annotation cannot be `Any`.
-    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     def _unpack_data(data: Union[Any, Tuple[Any, Any]]) -> Any:
         r"""
         Helper to extract input from labels when getting items from a Dataset. Assumes

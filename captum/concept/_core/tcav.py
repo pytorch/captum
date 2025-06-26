@@ -315,8 +315,6 @@ class TCAV(ConceptInterpreter):
         self.model_id = model_id
         self.concepts: Set[Concept] = set()
         self.classifier = classifier
-        # pyre-fixme[4]: Attribute `classifier_kwargs` of class `TCAV`
-        # must have a type other than `Any`.
         self.classifier_kwargs: Any = classifier_kwargs
         # pyre-fixme[8]: Attribute has type `Dict[str, Dict[str, CAV]]`; used as
         #  `DefaultDict[Variable[_KT], DefaultDict[Variable[_KT], Variable[_VT]]]`.
@@ -740,7 +738,6 @@ class TCAV(ConceptInterpreter):
             classes = []
             for concepts in experimental_sets:
                 concepts_key = concepts_to_str(concepts)
-                # pyre-fixme[33]: Given annotation cannot contain `Any`.
                 cavs_stats = cast(Dict[str, Any], self.cavs[concepts_key][layer].stats)
                 cavs.append(cavs_stats["weights"].float().detach().tolist())
                 classes.append(cavs_stats["classes"])

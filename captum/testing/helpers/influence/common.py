@@ -699,7 +699,6 @@ def build_test_name_func(args_to_skip: Optional[List[str]] = None) -> partial:
     return partial(generate_test_name, args_to_skip=args_to_skip)
 
 
-# pyre-fixme[3]: Return type must be specified as type that does not contain `Any`.
 def _format_batch_into_tuple(
     # pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.
     inputs: Union[Tuple, Tensor],

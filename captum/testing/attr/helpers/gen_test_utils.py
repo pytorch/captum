@@ -32,7 +32,6 @@ def parse_test_config(
 ) -> Tuple[List[Type[Attribution]], Module, Dict[str, Any], Module, bool, bool]:
     algorithms = cast(List[Type[Attribution]], test_config["algorithms"])
     model = test_config["model"]
-    # pyre-fixme[33]: Given annotation cannot contain `Any`.
     args = cast(Dict[str, Any], test_config["attribute_args"])
     layer = test_config["layer"] if "layer" in test_config else None
     noise_tunnel = (

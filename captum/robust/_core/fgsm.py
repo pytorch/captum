@@ -85,7 +85,6 @@ class FGSM(Perturbation):
         self,
         inputs: TensorOrTupleOfTensorsGeneric,
         epsilon: float,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         target: Any,
         additional_forward_args: Optional[object] = None,
         targeted: bool = False,

@@ -182,8 +182,6 @@ class Test(BaseTest):
         expected_delta: Optional[Tensor] = None,
         n_samples: int = 5,
         attribute_to_layer_input: bool = False,
-        # pyre-fixme[2]: Parameter `add_args` has type `None`
-        # but type `Any` is specified.
         add_args: Any = None,
     ) -> None:
         lgs = LayerGradientShap(model, layer)
