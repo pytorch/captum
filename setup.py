@@ -76,7 +76,7 @@ DEV_REQUIRES = (
         "sphinx-autodoc-typehints",
         "sphinxcontrib-katex",
         "mypy>=0.760",
-        "pyre-check-nightly==0.0.101745838703",
+        "pyre-check-nightly==0.0.101750936314",
         "usort==1.0.2",
         "ufmt",
         "scikit-learn",
