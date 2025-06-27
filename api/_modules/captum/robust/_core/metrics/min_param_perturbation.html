@@ -237,12 +237,9 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">current_count</span> <span class="o">+=</span> <span class="n">batch_size</span>
             <span class="k">return</span> <span class="kc">None</span>
 
-    <span class="c1"># pyre-fixme[3]: Return annotation cannot contain `Any`.</span>
     <span class="k">def</span> <span class="nf">_apply_attack</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">preproc_input</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="n">attack_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
         <span class="n">param</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
@@ -263,16 +260,12 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">preproc_attacked_inp</span> <span class="o">=</span> <span class="n">attacked_inp</span>
         <span class="k">return</span> <span class="n">preproc_attacked_inp</span><span class="p">,</span> <span class="n">attacked_inp</span>
 
-    <span class="c1"># pyre-fixme[3]: Return annotation cannot contain `Any`.</span>
     <span class="k">def</span> <span class="nf">_linear_search</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">preproc_input</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="n">attack_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
-        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">expanded_additional_args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="n">correct_fn_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span><span class="p">,</span>
@@ -324,16 +317,12 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
 
-    <span class="c1"># pyre-fixme[3]: Return annotation cannot contain `Any`.</span>
     <span class="k">def</span> <span class="nf">_binary_search</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">preproc_input</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="n">attack_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
-        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">expanded_additional_args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="n">correct_fn_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span><span class="p">,</span>
@@ -414,10 +403,8 @@ src="/_sphinx/documentation_options.js"></script>
 <div class="viewcode-block" id="MinParamPerturbation.evaluate">
 <a class="viewcode-back" href="../../../../../robust.html#captum.robust.MinParamPerturbation.evaluate">[docs]</a>
     <span class="nd">@log_usage</span><span class="p">(</span><span class="n">part_of_slo</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="c1"># pyre-fixme[3]: Return annotation cannot contain `Any`.</span>
     <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[2]: Parameter annotation cannot be `Any`.</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
         <span class="c1"># pyre-fixme[24]: Generic type `tuple` expects at least 1 type parameter.</span>
         <span class="n">additional_forward_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>

@@ -349,8 +349,6 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_id</span> <span class="o">=</span> <span class="n">model_id</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">concepts</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Concept</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">classifier</span>
-        <span class="c1"># pyre-fixme[4]: Attribute `classifier_kwargs` of class `TCAV`</span>
-        <span class="c1"># must have a type other than `Any`.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">classifier_kwargs</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">classifier_kwargs</span>
         <span class="c1"># pyre-fixme[8]: Attribute has type `Dict[str, Dict[str, CAV]]`; used as</span>
         <span class="c1">#  `DefaultDict[Variable[_KT], DefaultDict[Variable[_KT], Variable[_VT]]]`.</span>
@@ -791,7 +789,6 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">classes</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">concepts</span> <span class="ow">in</span> <span class="n">experimental_sets</span><span class="p">:</span>
                 <span class="n">concepts_key</span> <span class="o">=</span> <span class="n">concepts_to_str</span><span class="p">(</span><span class="n">concepts</span><span class="p">)</span>
-                <span class="c1"># pyre-fixme[33]: Given annotation cannot contain `Any`.</span>
                 <span class="n">cavs_stats</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">cavs</span><span class="p">[</span><span class="n">concepts_key</span><span class="p">][</span><span class="n">layer</span><span class="p">]</span><span class="o">.</span><span class="n">stats</span><span class="p">)</span>
                 <span class="n">cavs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cavs_stats</span><span class="p">[</span><span class="s2">"weights"</span><span class="p">]</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
                 <span class="n">classes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cavs_stats</span><span class="p">[</span><span class="s2">"classes"</span><span class="p">])</span>
