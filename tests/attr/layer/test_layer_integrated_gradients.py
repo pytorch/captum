@@ -375,8 +375,6 @@ class Test(BaseTest):
         target_layer: Module,
         test_input: Union[Tensor, Tuple[Tensor, ...]],
         expected_ig: Tuple[List[List[float]], ...],
-        # pyre-fixme[2]: Parameter `additional_input` has type `None`
-        # but type `Any` is specified.
         additional_input: Any = None,
     ) -> None:
         layer_ig = LayerIntegratedGradients(model, target_layer)

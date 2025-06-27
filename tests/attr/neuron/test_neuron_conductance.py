@@ -199,8 +199,6 @@ class Test(BaseTest):
         # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         test_neuron: Union[int, Tuple[int, ...], Callable],
         expected_input_conductance: Union[List[float], Tuple[List[List[float]], ...]],
-        # pyre-fixme[2]: Parameter `additional_input` has type `None` but type
-        # `Any` is specified.
         additional_input: Any = None,
         multiply_by_inputs: bool = True,
     ) -> None:

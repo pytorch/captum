@@ -227,7 +227,6 @@ def _forward_layer_eval(
 def _forward_layer_distributed_eval(
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
     forward_fn: Callable,
-    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     inputs: Any,
     layer: ModuleOrModuleList,
     target_ind: TargetType = None,
@@ -399,10 +398,8 @@ def _extract_device_ids(
     ):
         if (
             hasattr(forward_fn, "device_ids")
-            # pyre-fixme[33]: Given annotation cannot be `Any`.
             and cast(Any, forward_fn).device_ids is not None
         ):
-            # pyre-fixme[33]: Given annotation cannot be `Any`.
             device_ids = cast(Any, forward_fn).device_ids
         else:
             raise AssertionError(
@@ -820,7 +817,6 @@ def _extract_parameters_from_layers(layer_modules):
 
 def _compute_jacobian_wrt_params(
     model: Module,
-    # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
     inputs: Tuple[Any, ...],
     labels: Optional[Tensor] = None,
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
@@ -893,10 +889,8 @@ def _compute_jacobian_wrt_params(
         return tuple(grads)
 
 
-# pyre-fixme[3]: Return annotation cannot contain `Any`.
 def _compute_jacobian_wrt_params_with_sample_wise_trick(
     model: Module,
-    # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
     inputs: Tuple[Any, ...],
     labels: Optional[Tensor] = None,
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.

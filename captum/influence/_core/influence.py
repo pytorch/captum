@@ -31,8 +31,6 @@ class DataInfluence(ABC):
         self.train_dataset = train_dataset
 
     @abstractmethod
-    # pyre-fixme[3]: Return annotation cannot be `Any`.
-    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     def influence(self, inputs: Any = None, **kwargs: Any) -> Any:
         r"""
         Args:

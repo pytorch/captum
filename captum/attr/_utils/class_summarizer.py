@@ -60,7 +60,6 @@ class ClassSummarizer(Summarizer, Generic[KeyType]):
 
         num_labels = 1
 
-        # pyre-fixme[33]: Given annotation cannot contain `Any`.
         labels_typed: Union[List[Any], Tensor]
         if isinstance(labels, list) or isinstance(labels, Tensor):
             labels_typed = labels

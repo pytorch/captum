@@ -14,8 +14,6 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 
-# pyre-fixme[4]: Attribute annotation cannot be `Any`.
-# pyre-fixme[2]: Parameter annotation cannot be `Any`.
 FeatureOutput = namedtuple("FeatureOutput", "name base modified type contribution")
 
 
