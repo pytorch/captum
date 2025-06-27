@@ -239,7 +239,6 @@ class TracInCPFast(TracInCPBase):
     @log_usage(part_of_slo=True)
     def influence(  # type: ignore[override]
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Tuple[Any, ...],
         k: Optional[int] = None,
         proponents: bool = True,
@@ -330,9 +329,7 @@ class TracInCPFast(TracInCPBase):
     # pyre-fixme[3]: Return type must be annotated.
     def _influence_batch_tracincp_fast(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         test_batch: Tuple[Any, ...],
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         train_batch: Tuple[Any, ...],
     ):
         """
@@ -388,7 +385,6 @@ class TracInCPFast(TracInCPBase):
 
     def _influence(  # type: ignore[override]
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Tuple[Any, ...],
         show_progress: bool = False,
     ) -> Tensor:
@@ -453,7 +449,6 @@ class TracInCPFast(TracInCPBase):
 
     def _get_k_most_influential(  # type: ignore[override]
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Tuple[Any, ...],
         k: int = 5,
         proponents: bool = True,
@@ -525,7 +520,6 @@ class TracInCPFast(TracInCPBase):
 
     def _self_influence_by_checkpoints(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         show_progress: bool = False,
     ) -> Tensor:
@@ -680,7 +674,6 @@ class TracInCPFast(TracInCPBase):
     @log_usage(part_of_slo=True)
     def self_influence(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Optional[Union[Tuple[Any, ...], DataLoader]] = None,
         show_progress: bool = False,
         outer_loop_by_checkpoints: bool = False,
@@ -757,7 +750,6 @@ class TracInCPFast(TracInCPBase):
 
 def _basic_computation_tracincp_fast(
     influence_instance: TracInCPFast,
-    # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
     inputs: Tuple[Any, ...],
     targets: Tensor,
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
@@ -1085,7 +1077,6 @@ class TracInCPFastRandProj(TracInCPFast):
 
     def _influence(  # type: ignore[override]
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Tuple[Any, ...],
     ) -> Tensor:
         r"""
@@ -1122,7 +1113,6 @@ class TracInCPFastRandProj(TracInCPFast):
 
     def _get_k_most_influential(  # type: ignore[override]
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Tuple[Any, ...],
         k: int = 5,
         proponents: bool = True,
@@ -1179,7 +1169,6 @@ class TracInCPFastRandProj(TracInCPFast):
     @log_usage(part_of_slo=True)
     def self_influence(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Optional[Union[Tuple[Any, ...], DataLoader]] = None,
         show_progress: bool = False,
         outer_loop_by_checkpoints: bool = False,
@@ -1253,7 +1242,6 @@ class TracInCPFastRandProj(TracInCPFast):
     @log_usage(part_of_slo=True)
     def influence(  # type: ignore[override]
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Optional[Tuple[Any, ...]] = None,
         k: int = 5,
         proponents: bool = True,
@@ -1447,7 +1435,6 @@ class TracInCPFastRandProj(TracInCPFast):
 
     def _get_intermediate_quantities_tracincp_fast_rand_proj(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         projection_quantities: Optional[Tuple[torch.Tensor, torch.Tensor]],
         test: bool = False,
@@ -1609,7 +1596,6 @@ class TracInCPFastRandProj(TracInCPFast):
     @log_usage(part_of_slo=True)
     def compute_intermediate_quantities(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
     ) -> Tensor:
         """
