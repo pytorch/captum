@@ -571,8 +571,6 @@ class Test(BaseTest):
             target=None,
             feature_mask=mask,
             perturbations_per_eval=(1,),
-            # pyre-fixme[58]: `+` is not supported for operand types `Tuple[int]`
-            #  and `Size`.
             expected_ablation=torch.zeros((5 * 3 * 2,) + inp[0].shape),
             test_future=True,
         )
@@ -659,8 +657,6 @@ class Test(BaseTest):
             target=None,
             feature_mask=mask,
             perturbations_per_eval=(1,),
-            # pyre-fixme[58]: `+` is not supported for operand types `Tuple[int]`
-            #  and `Size`.
             expected_ablation=torch.zeros((5 * 3 * 2,) + inp[0].shape),
         )
 
@@ -833,8 +829,6 @@ class Test(BaseTest):
         self,
         ablation_algo: Attribution,
         test_input: TensorOrTupleOfTensorsGeneric,
-        # pyre-fixme[2]: Parameter `expected_ablation` must have a type that does not
-        # contain `Any`.
         expected_ablation: Union[
             Tensor,
             Tuple[Tensor, ...],
@@ -848,8 +842,6 @@ class Test(BaseTest):
             Tuple[List[Any], ...],
         ],
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
-        # pyre-fixme[2]: Parameter `additional_input` has type `None` but type `Any`
-        # is specified.
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
         baselines: BaselineType = None,

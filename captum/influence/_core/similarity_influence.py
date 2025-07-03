@@ -163,7 +163,6 @@ class SimilarityInfluence(DataInfluence):
         self,
         inputs: Union[Tensor, Tuple[Tensor, ...]],
         top_k: int = 1,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         additional_forward_args: Optional[Any] = None,
         load_src_from_disk: bool = True,
         **kwargs: Any,

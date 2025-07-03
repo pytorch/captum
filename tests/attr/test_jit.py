@@ -85,7 +85,6 @@ class JITMeta(type):
     def __new__(
         metacls,
         name: str,
-        # pyre-fixme[2]: Parameter `bases` must have a type that does not contain `Any`.
         bases: Tuple[Type[Any], ...],
         # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         attrs: Dict[str, Callable],

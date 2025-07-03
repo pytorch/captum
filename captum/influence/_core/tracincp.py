@@ -213,7 +213,6 @@ class TracInCPBase(DataInfluence):
     @abstractmethod
     def self_influence(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Optional[Union[Tuple[Any, ...], DataLoader]] = None,
         show_progress: bool = False,
     ) -> Tensor:
@@ -274,7 +273,6 @@ class TracInCPBase(DataInfluence):
     @abstractmethod
     def _get_k_most_influential(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         k: int = 5,
         proponents: bool = True,
@@ -326,7 +324,6 @@ class TracInCPBase(DataInfluence):
     @abstractmethod
     def _influence(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         show_progress: bool = False,
     ) -> Tensor:
@@ -362,7 +359,6 @@ class TracInCPBase(DataInfluence):
     @abstractmethod
     def influence(  # type: ignore[override]
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         k: Optional[int] = None,
         proponents: bool = True,
@@ -616,7 +612,6 @@ class TracInCP(TracInCPBase):
     @log_usage(part_of_slo=True)
     def influence(  # type: ignore[override]
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         k: Optional[int] = None,
         proponents: bool = True,
@@ -765,7 +760,6 @@ class TracInCP(TracInCPBase):
 
         inputs_batch = next(inputs_iter)
 
-        # pyre-fixme[2]: Parameter `inputs_batch` must have a type that does not contain `Any`. # noqa: E501
         def get_batch_contribution(inputs_batch: Tuple[Any, ...]) -> Tuple[Tensor, ...]:
             _input_jacobians = self._basic_computation_tracincp(
                 inputs_batch[0:-1],
@@ -818,7 +812,6 @@ class TracInCP(TracInCPBase):
     @log_usage(part_of_slo=True)
     def compute_intermediate_quantities(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         aggregate: bool = False,
     ) -> Tensor:
@@ -915,9 +908,7 @@ class TracInCP(TracInCPBase):
 
     def _influence_batch_tracincp(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         input_checkpoint_jacobians: List[Tuple[Any, ...]],
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         train_batch: Tuple[Any, ...],
     ) -> Tensor:
         """
@@ -992,7 +983,6 @@ class TracInCP(TracInCPBase):
 
     def _influence(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         show_progress: bool = False,
         aggregate: bool = False,
@@ -1072,7 +1062,6 @@ class TracInCP(TracInCPBase):
 
     def _get_k_most_influential(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         k: int = 5,
         proponents: bool = True,
@@ -1163,7 +1152,6 @@ class TracInCP(TracInCPBase):
 
     def _self_influence_by_checkpoints(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         show_progress: bool = False,
     ) -> Tensor:
@@ -1339,7 +1327,6 @@ class TracInCP(TracInCPBase):
     @log_usage(part_of_slo=True)
     def self_influence(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Optional[Union[Tuple[Any, ...], DataLoader]] = None,
         show_progress: bool = False,
         outer_loop_by_checkpoints: bool = False,
@@ -1415,7 +1402,6 @@ class TracInCP(TracInCPBase):
 
     def _basic_computation_tracincp(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Tuple[Any, ...],
         targets: Optional[Tensor] = None,
         # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
