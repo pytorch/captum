@@ -282,6 +282,31 @@ class Test(BaseTest):
             strides=((1, 2, 1), (1, 1, 2)),
         )
 
+    def test_simple_multi_input_conv_diff_shapes(self) -> None:
+        net = BasicModel_ConvNet_One_Conv()
+        inp = torch.arange(16, dtype=torch.float).view(1, 1, 4, 4)
+        inp2 = torch.ones((1, 1, 4, 1))
+        self._occlusion_test_assert(
+            net,
+            (inp, inp2),
+            (
+                [
+                    [
+                        [
+                            [17.0, 17.0, 17.0, 17.0],
+                            [17.0, 17.0, 17.0, 17.0],
+                            [67.0, 67.0, 67.0, 67.0],
+                            [67.0, 67.0, 67.0, 67.0],
+                        ]
+                    ]
+                ],
+                [[[[10.0], [10.0], [8.0], [6.0]]]],
+            ),
+            perturbations_per_eval=(1, 2, 4, 8, 12, 16),
+            sliding_window_shapes=((1, 2, 4), (1, 2, 1)),
+            strides=((1, 2, 1), (1, 1, 1)),
+        )
+
     def test_futures_not_implemented(self) -> None:
         net = BasicModel_ConvNet_One_Conv()
         occ = Occlusion(net)
