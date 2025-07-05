@@ -3,12 +3,24 @@
 # pyre-strict
 import warnings
 from enum import Enum
-from typing import Any, Callable, cast, Dict, Iterable, List, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import matplotlib
 
 import numpy as np
 import numpy.typing as npt
+import torch
 from matplotlib import cm, colors, pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection
@@ -74,8 +86,7 @@ def _cumulative_sum_threshold(
     )
     sorted_vals = np.sort(values.flatten())
     cum_sums = np.cumsum(sorted_vals)
-    threshold_id = np.where(cum_sums >= cum_sums[-1] * 0.01 * percentile)[0][0]
-    # pyre-fixme[7]: Expected `float` but got `ndarray[typing.Any, dtype[typing.Any]]`.
+    threshold_id: int = np.where(cum_sums >= cum_sums[-1] * 0.01 * percentile)[0][0]
     return sorted_vals[threshold_id]
 
 
@@ -973,8 +984,7 @@ def _get_color(attr: int) -> str:
     return "hsl({}, {}%, {}%)".format(hue, sat, lig)
 
 
-# pyre-fixme[2]: Parameter must be annotated.
-def format_classname(classname) -> str:
+def format_classname(classname: Union[str, int]) -> str:
     return '<td><text style="padding-right:2em"><b>{}</b></text></td>'.format(classname)
 
 
@@ -984,8 +994,7 @@ def format_special_tokens(token: str) -> str:
     return token
 
 
-# pyre-fixme[2]: Parameter must be annotated.
-def format_tooltip(item, text) -> str:
+def format_tooltip(item: str, text: str) -> str:
     return '<div class="tooltip">{item}\
         <span class="tooltiptext">{text}</span>\
         </div>'.format(
@@ -993,10 +1002,14 @@ def format_tooltip(item, text) -> str:
     )
 
 
-# pyre-fixme[2]: Parameter must be annotated.
-def format_word_importances(words, importances) -> str:
+def format_word_importances(
+    words: Sequence[str], importances: Union[Sequence[int], Tensor]
+) -> str:
     if importances is None or len(importances) == 0:
         return "<td></td>"
+    if isinstance(importances, Tensor):
+        assert len(importances.shape) == 1
+        assert importances.dtype == torch.long
     assert len(words) <= len(importances)
     tags = ["<td>"]
     for word, importance in zip(words, importances[: len(words)]):
