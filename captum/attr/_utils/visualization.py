@@ -3,7 +3,18 @@
 # pyre-strict
 import warnings
 from enum import Enum
-from typing import Any, Callable, cast, Dict, Iterable, List, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import matplotlib
 
@@ -74,8 +85,7 @@ def _cumulative_sum_threshold(
     )
     sorted_vals = np.sort(values.flatten())
     cum_sums = np.cumsum(sorted_vals)
-    threshold_id = np.where(cum_sums >= cum_sums[-1] * 0.01 * percentile)[0][0]
-    # pyre-fixme[7]: Expected `float` but got `ndarray[typing.Any, dtype[typing.Any]]`.
+    threshold_id: int = np.where(cum_sums >= cum_sums[-1] * 0.01 * percentile)[0][0]
     return sorted_vals[threshold_id]
 
 
@@ -959,7 +969,7 @@ class VisualizationDataRecord:
         self.convergence_score: float = convergence_score
 
 
-def _get_color(attr: int) -> str:
+def _get_color(attr: float) -> str:
     # clip values to prevent CSS errors (Values should be from [-1,1])
     attr = max(-1, min(1, attr))
     if attr > 0:
@@ -973,8 +983,7 @@ def _get_color(attr: int) -> str:
     return "hsl({}, {}%, {}%)".format(hue, sat, lig)
 
 
-# pyre-fixme[2]: Parameter must be annotated.
-def format_classname(classname) -> str:
+def format_classname(classname: Union[str, int]) -> str:
     return '<td><text style="padding-right:2em"><b>{}</b></text></td>'.format(classname)
 
 
@@ -984,8 +993,7 @@ def format_special_tokens(token: str) -> str:
     return token
 
 
-# pyre-fixme[2]: Parameter must be annotated.
-def format_tooltip(item, text) -> str:
+def format_tooltip(item: str, text: str) -> str:
     return '<div class="tooltip">{item}\
         <span class="tooltiptext">{text}</span>\
         </div>'.format(
@@ -993,10 +1001,16 @@ def format_tooltip(item, text) -> str:
     )
 
 
-# pyre-fixme[2]: Parameter must be annotated.
-def format_word_importances(words, importances) -> str:
+def format_word_importances(
+    words: Sequence[str],
+    importances: Union[Sequence[float], npt.NDArray[np.number], Tensor],
+) -> str:
     if importances is None or len(importances) == 0:
         return "<td></td>"
+    if isinstance(importances, np.ndarray) or isinstance(importances, Tensor):
+        assert len(importances.shape) == 1, "Expected 1D array, got {}".format(
+            importances.shape
+        )
     assert len(words) <= len(importances)
     tags = ["<td>"]
     for word, importance in zip(words, importances[: len(words)]):
