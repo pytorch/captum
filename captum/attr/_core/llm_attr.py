@@ -5,13 +5,14 @@ import warnings
 from abc import ABC
 from copy import copy
 from dataclasses import dataclass
-from textwrap import shorten
+from textwrap import dedent, shorten
 from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Type, Union
 
 import matplotlib.colors as mcolors
 
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.typing as npt
 
 import torch
 from captum._utils.typing import TokenizerLike
@@ -51,10 +52,70 @@ class LLMAttributionResult:
     It also provides utilities to help present and plot the result in different forms.
     """
 
-    seq_attr: Tensor
-    token_attr: Optional[Tensor]
     input_tokens: List[str]
     output_tokens: List[str]
+    # pyre-ignore[13]: initialized via a property setter
+    _seq_attr: Tensor
+    _token_attr: Optional[Tensor] = None
+
+    def __init__(
+        self,
+        seq_attr: npt.ArrayLike,
+        token_attr: Optional[npt.ArrayLike],
+        input_tokens: List[str],
+        output_tokens: List[str],
+    ) -> None:
+        self.input_tokens = input_tokens
+        self.output_tokens = output_tokens
+        self.seq_attr = seq_attr
+        self.token_attr = token_attr
+
+    @property
+    def seq_attr(self) -> Tensor:
+        return self._seq_attr
+
+    @seq_attr.setter
+    def seq_attr(self, seq_attr: npt.ArrayLike) -> None:
+        if isinstance(seq_attr, Tensor):
+            self._seq_attr = seq_attr
+        else:
+            self._seq_attr = torch.tensor(seq_attr)
+        # IDEA: in the future we might want to support higher dim seq_attr
+        # (e.g. attention w.r.t. multiple layers, gradients w.r.t. different classes)
+        assert len(self._seq_attr.shape) == 1, "seq_attr must be a 1D tensor"
+
+        assert (
+            len(self.input_tokens) == self._seq_attr.shape[0]
+        ), "seq_attr and input_tokens must have the same length"
+
+    @property
+    def token_attr(self) -> Optional[Tensor]:
+        return self._token_attr
+
+    @token_attr.setter
+    def token_attr(self, token_attr: Optional[npt.ArrayLike]) -> None:
+        if isinstance(token_attr, Tensor):
+            self._token_attr = token_attr
+        elif token_attr is None:
+            # can't combine with previous clause, linter unhappy ¯\_(ツ)_/¯
+            self._token_attr = None
+        else:
+            self._token_attr = torch.tensor(token_attr)
+        # IDEA: in the future we might want to support higher dim seq_attr
+        if self._token_attr is not None:
+            assert len(self._token_attr.shape) == 2, "token_attr must be a 2D tensor"
+
+        if self._token_attr is not None:
+            assert self._token_attr.shape == (
+                len(self.output_tokens),
+                len(self.input_tokens),
+            ), dedent(
+                f"""\
+                Expect token_attr to have shape
+                {len(self.output_tokens), len(self.input_tokens)},
+                got {self._token_attr.shape}
+                """
+            )
 
     @property
     def seq_attr_dict(self) -> Dict[str, float]:
@@ -124,10 +185,14 @@ class LLMAttributionResult:
 
         # Show all ticks and label them with the respective list entries.
         shortened_tokens = [
-            shorten(t, width=50, placeholder="...") for t in self.input_tokens
+            shorten(repr(t)[1:-1], width=50, placeholder="...")
+            for t in self.input_tokens
         ]
         ax.set_xticks(np.arange(data.shape[1]), labels=shortened_tokens)
-        ax.set_yticks(np.arange(data.shape[0]), labels=self.output_tokens)
+        ax.set_yticks(
+            np.arange(data.shape[0]),
+            labels=[repr(token)[1:-1] for token in self.output_tokens],
+        )
 
         # Let the horizontal axes labeling appear on top.
         ax.tick_params(top=True, bottom=False, labeltop=True, labelbottom=False)
@@ -175,7 +240,8 @@ class LLMAttributionResult:
         fig.set_size_inches(max(data.shape[0] / 2, 6.4), max(data.shape[0] / 4, 4.8))
 
         shortened_tokens = [
-            shorten(t, width=50, placeholder="...") for t in self.input_tokens
+            shorten(repr(t)[1:-1], width=50, placeholder="...")
+            for t in self.input_tokens
         ]
         ax.set_xticks(range(data.shape[0]), labels=shortened_tokens)
 
