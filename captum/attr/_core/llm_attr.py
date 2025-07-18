@@ -55,6 +55,7 @@ class LLMAttributionResult:
     token_attr: Optional[Tensor]
     input_tokens: List[str]
     output_tokens: List[str]
+    output_probs: Optional[Tensor] = None
 
     @property
     def seq_attr_dict(self) -> Dict[str, float]:
