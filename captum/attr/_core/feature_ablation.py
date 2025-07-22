@@ -685,7 +685,7 @@ class FeatureAblation(PerturbationAttribution):
 
         for i, input_tensor in enumerate(inputs):
             if i not in tensor_idxs:
-                ablated_inputs.append(input_tensor)
+                ablated_inputs.append(input_tensor.clone())
                 current_masks.append(None)
                 continue
             tensor_mask = []
