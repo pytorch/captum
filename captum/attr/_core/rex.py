@@ -4,14 +4,13 @@
 import itertools
 from typing import List
 import torch
-import math, heapq
 from collections import deque
 import random
 from dataclasses import dataclass
 
 from captum.attr._utils.attribution import PerturbationAttribution
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
-from captum.attr._utils.common import _format_input_baseline, _validate_input
+from captum.attr._utils.common import _format_input_baseline, _validate_input, _format_output
 from captum.log.dummy_log import log_usage
 
 @dataclass
@@ -28,8 +27,8 @@ def _occlude_data(data: torch.Tensor, partitions: List[List[int]], neutral) -> t
 
 def _powerset(iterable):
     s = list(iterable)
-    return [list(combo) for r in range(len(s)+1) 
-            for combo in itertools.combinations(s, r)]
+    return (list(combo) for r in range(len(s)+1) 
+            for combo in itertools.combinations(s, r))
 
 
 def _partitions_combinations(partitions):
@@ -45,24 +44,21 @@ def _apply_responsibility(feature_importance, part, responsibility):
 
     return feature_importance
 
-def _partitions_equal(partitions_a, partitions_b):
-    set_a = {tuple(p) if isinstance(p, list) else p for p in partitions_a}
-    set_b = {tuple(p) if isinstance(p, list) else p for p in partitions_b}
 
-    return set_a == set_b
+def _part_to_set(partition):
+    return frozenset(frozenset(p) if isinstance(p, list) else p for p in partition)
 
 
-def _responsibility(subject_partition: List, consistent_set: List[List[int]]) -> float:
-    witnesses = [mut.partitions for mut in consistent_set if subject_partition not in mut.partitions]
-
+def _responsibility(subject_partition: List, consistent_partitions: List[List[int]]) -> float:
+    witnesses = [mut.partitions for mut in consistent_partitions if subject_partition not in mut.partitions]
+    consistent_set = set(_part_to_set(part.partitions) for part in consistent_partitions)
+    
     # a witness is valid if perturbing it results in a counterfactual 
     # dependence on the subject partition
-
-    # hashset!
     valid_witnesses = []
     for witness in witnesses:
-        counterfactual = [subject_partition] + witness
-        if not any(_partitions_equal(counterfactual, cst.partitions) for cst in consistent_set):
+        counterfactual = _part_to_set([subject_partition] + witness)
+        if not counterfactual in consistent_set:
             valid_witnesses.append(witness) 
 
     if len(valid_witnesses) == 0:
@@ -110,7 +106,8 @@ class ReX(PerturbationAttribution):
                   *,
                   search_depth: int = 10,
                   n_partitions: int = 8,
-                  n_searches: int = 5) -> TensorOrTupleOfTensorsGeneric:
+                  n_searches: int = 5,
+                  contiguous_partitions: bool = False) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Args:
             inputs:
@@ -138,22 +135,23 @@ class ReX(PerturbationAttribution):
         self._search_depth = search_depth
         self._n_searches = n_searches
 
-        is_tuple_inputs = isinstance(inputs, tuple)
-        is_tuple_baselines = isinstance(baselines, tuple)
+        is_input_tuple = isinstance(inputs, tuple)
+        is_baseline_tuple = isinstance(baselines, tuple)
 
         attributions = []
 
         # match inputs and baselines, explain
-        if is_tuple_inputs and is_tuple_baselines:
+        if is_input_tuple and is_baseline_tuple:
             for input, baseline in zip(inputs, baselines):
                 attributions.append(self._explain(input, baseline))
-        elif is_tuple_inputs and not is_tuple_baselines:
+        elif is_input_tuple and not is_baseline_tuple:
             for input in inputs:
                 attributions.append(self._explain(input, baselines))
         else:
             attributions.append(self._explain(inputs, baselines))
 
-        return tuple(attributions)
+        return _format_output(is_input_tuple, tuple(attributions))
+
 
     def _flatten(self, data):
         self._original_shape = data.size()
@@ -255,7 +253,6 @@ class ReX(PerturbationAttribution):
 
                 for part in partitions:
                     resp = _responsibility(part, cst_set)
-                    # update should be conditional on entropy?
                     feature_attribution = _apply_responsibility(feature_attribution, part, resp * parent_resp)
                     if resp > 0 and \
                             len(part) > 1 and \

@@ -63,7 +63,7 @@ class Test(BaseTest):
         # input shape                             # important idx
         ((12, 12, 12),                            (1,2,1)),
         ((12, 12, 12, 6),                         (1,1,4,1)),
-        # ((1920, 1080),                            (2, 4)) # image-like
+        ((1920, 1080),                            (2, 4)) # image-like
     ])
     def test_selector_function_large_input(self, input_shape, idx):
         rex = ReX(lambda x: x[idx])
