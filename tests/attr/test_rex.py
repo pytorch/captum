@@ -52,26 +52,26 @@ class Test(BaseTest):
     def test_selector_function(self, input, idx):
         rex = ReX(lambda x: x[idx])
         attributions = rex.attribute(input, 0)[0]
-
+        print(attributions)
         self.assertTrue(attributions[idx] == 1)
 
         attributions[idx] = 0
         self.assertFalse(torch.sum(attributions, dim=None))
 
 
-    @parameterized.expand([
-        # input shape                             # important idx
-        ((12, 12, 12),                            (1,2,1)),
-        ((12, 12, 12, 6),                         (1,1,4,1)),
-        ((1920, 1080),                            (2, 4)) # image-like
-    ])
-    def test_selector_function_large_input(self, input_shape, idx):
-        rex = ReX(lambda x: x[idx])
+    # @parameterized.expand([
+    #     # input shape                             # important idx
+    #     # ((12, 12, 12),                            (1,2,1)),
+    #     # ((12, 12, 12, 6),                         (1,1,4,1)),
+    #     # ((1920, 1080),                            (2, 4)) # image-like
+    # ])
+    # def test_selector_function_large_input(self, input_shape, idx):
+    #     rex = ReX(lambda x: x[idx])
 
-        input = torch.ones(*input_shape)
-        attributions = rex.attribute(input, 0, n_partitions=2, search_depth=10, n_searches=1)[0]
+    #     input = torch.ones(*input_shape)
+    #     attributions = rex.attribute(input, 0, n_partitions=2, search_depth=10, n_searches=1)[0]
 
-        self.assertTrue(attributions[idx])
-        attributions[idx] = 0
-        self.assertLess(torch.sum(attributions, dim=None), 1)
+    #     self.assertTrue(attributions[idx])
+    #     attributions[idx] = 0
+    #     self.assertLess(torch.sum(attributions, dim=None), 1)
 

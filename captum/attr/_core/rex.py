@@ -188,6 +188,33 @@ class ReX(PerturbationAttribution):
         return partitions
 
 
+    def _contiguous_partition(self, resposibility, choices, depth):
+        ndim = len(self._original_shape)
+        split_dim = depth % ndim
+
+        # find max and min values for dimension we are splitting
+        dmax, dmin = 0, max(self._original_shape)
+        for idx in choices:
+            coords = torch.unravel_index(torch.tensor(idx), self._original_shape)
+            
+            dmax = max(dmax, coords[split_dim])
+            dmin = min(dmin, coords[split_dim])
+
+        # cant split this axis
+        n_splits = min((dmax - dmin), self._n_partitions)
+        split_points = sorted(list(set(random.sample(range(dmin + 1, dmax), n_splits - 1))))
+
+        bins = [[] for _ in range(n_splits - 1)]
+        for idx in choices:
+            for i, s in enumerate(split_points):
+                if s > torch.unravel_index(torch.tensor(idx), self._original_shape)[split_dim]:
+                    bins[i].append(idx)
+                    break
+        
+        print(bins)
+        return bins
+
+
     def _partition(self, responsibility: List[float], choices: List[int]) -> List[List[int]]:
         population = choices.copy()
         random.shuffle(population)
@@ -238,7 +265,7 @@ class ReX(PerturbationAttribution):
 
             while part_q:
                 indices, parent_resp, depth = part_q.popleft()
-                partitions = self._fast_partition(feature_attribution, indices)
+                partitions = self._contiguous_partition(feature_attribution, indices, depth)
 
                 mutants = []
                 for idx_combination in _partitions_combinations(partitions):
