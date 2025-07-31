@@ -432,6 +432,8 @@ class BasicModel_GradientLayerAttribution(nn.Module):
         self.linear3.weight = nn.Parameter(torch.ones(2, 4))
         self.linear3.bias = nn.Parameter(torch.tensor([-1.0, 1.0]))
 
+        self.list_output_layer = ListOutputLayer(2, [2, 2])
+
         self.int_layer = PassThroughLayerOutput()  # sample layer with an int output
 
     @no_type_check
@@ -452,11 +454,13 @@ class BasicModel_GradientLayerAttribution(nn.Module):
 
         relu_out = self.relu(lin1_out)
         lin2_out = self.linear2(relu_out)
+        list_out = self.list_output_layer(lin2_out)
+        resized_list_out = torch.cat(list_out, dim=1)
 
         lin3_out = self.linear3(lin1_out_alt)
         int_output = self.int_layer(lin3_out.to(torch.int64))
 
-        output_tensors = torch.cat((lin2_out, int_output), dim=1)
+        output_tensors = torch.cat((resized_list_out, int_output), dim=1)
 
         return (
             output_tensors
@@ -468,6 +472,17 @@ class BasicModel_GradientLayerAttribution(nn.Module):
         )
         # we return a dictionary of tensors as an output to test the case
         # where an output accessor is required
+
+
+class ListOutputLayer(nn.Module):
+    def __init__(self, input_size: int, output_sizes: List[int]) -> None:
+        super().__init__()
+        self.linears = nn.ModuleList(
+            [nn.Linear(input_size, size) for size in output_sizes]
+        )
+
+    def forward(self, x: Tensor) -> List[Tensor]:
+        return [linear(x) for linear in self.linears]
 
 
 class MultiRelu(nn.Module):
