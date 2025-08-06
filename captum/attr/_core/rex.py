@@ -6,6 +6,7 @@ from typing import List
 import torch
 from collections import deque
 import random
+import math
 from dataclasses import dataclass
 
 from captum.attr._utils.attribution import PerturbationAttribution
@@ -13,36 +14,63 @@ from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
 from captum.attr._utils.common import _format_input_baseline, _validate_input, _format_output
 from captum.log.dummy_log import log_usage
 
-@dataclass
+
+class Partition:
+    def __init__(self, borders: List[slice] = None, elements=None, size=None):
+        self.borders = borders
+        self.elements = elements
+        self.size = size
+        
+        self._mask = None
+
+    def generate_mask(self, shape):
+        # function to generate a mask for a partition, polymorphic over
+        # splitting strategy
+
+        if self._mask is None and self.elements is not None:
+            self._mask = torch.ones(shape, dtype=torch.bool)
+            self._mask[tuple(self.elements.T)] = False
+        
+        elif self._mask is None and self.borders is not None:
+            self._mask = torch.ones(shape, dtype=torch.bool)
+
+            slices = list(slice(lo, hi) for (lo, hi) in self.borders)
+            self._mask[slices] = False
+        
+        return self._mask
+    
+    def __len__(self):
+        return self.size
+        
+@dataclass(eq=False)
 class Mutant:
     partitions: List[List[int]]
     data: List[int]
 
-def _occlude_data(data: torch.Tensor, partitions: List[List[int]], neutral) -> torch.Tensor:
-    mask = torch.ones_like(data, dtype=torch.bool)
-    for part in partitions:
-        mask[part] = False
+    # initialize a Mutant from some partitions
+    # eagerly create the underlying mutant data from partition masks
+    def __init__(self, data: torch.Tensor, partitions: List[Partition], neutral):
+        self.partitions = partitions
 
-    return torch.where(mask, data, neutral)
+        mask = torch.ones_like(data, dtype=torch.bool)
+        for part in partitions: mask &= part.generate_mask(mask.shape)
 
-def _powerset(iterable):
-    s = list(iterable)
+        self.data = torch.where(mask, data, neutral)
+
+    def __len__(self):
+        return len(self.partitions)
+
+
+def _powerset(s):
     return (list(combo) for r in range(len(s)+1) 
             for combo in itertools.combinations(s, r))
 
 
-def _partitions_combinations(partitions):
-    return  list(filter(
-        lambda x: len(x) <= len(partitions),
-        _powerset(partitions)))
+def _apply_responsibility(fi, part, responsibility):
+    distributed = responsibility / len(part)
+    mask = part.generate_mask(fi.shape)
 
-
-def _apply_responsibility(feature_importance, part, responsibility):
-    distributed_resp = responsibility / len(part)
-    for idx in part:
-        feature_importance[idx] = distributed_resp
-
-    return feature_importance
+    return torch.where(mask, fi, (fi * distributed))
 
 
 def _part_to_set(partition):
@@ -69,6 +97,9 @@ def _responsibility(subject_partition: List, consistent_partitions: List[List[in
 
     return 1.0 / (1.0 + float(minpart))
 
+
+def _generate_indices(ts):
+    return torch.tensor(tuple(itertools.product(*(range(s) for s in ts.shape))), dtype=torch.long)
 
 class ReX(PerturbationAttribution):
     """
@@ -153,65 +184,155 @@ class ReX(PerturbationAttribution):
         return _format_output(is_input_tuple, tuple(attributions))
 
 
-    def _flatten(self, data):
-        self._original_shape = data.size()
-        return data.reshape(-1)
+    def _explain(self, input, baseline):
+        self._original_shape = input.shape
+        self._size = input.numel()
 
-    def _unflatten(self, data):
-        return data.reshape(self._original_shape)
+        initial_prediction = self.forward_func(input)
+        feature_attribution = torch.full_like(input, 1.0/input.numel(), dtype=torch.float32)
+
+        initial_partition = Partition(
+            borders     = list((0, top) for top in self._original_shape),
+            elements    = _generate_indices(input),
+            size        = self._size
+        )
+        for _ in range(self._n_searches):
+            # by definition, root partition contains all indices
+            part_q = deque()
+            part_q.append((
+                initial_partition,
+                0
+            ))
+
+            while part_q:
+                prev_part, depth = part_q.popleft()
+                partitions = self._fast_partition(feature_attribution, prev_part)
+
+                consistent_set = set()
+                for parts_combo in _powerset(partitions):
+                    mut = Mutant(input, parts_combo, baseline)
+                    if self.forward_func(mut.data) == initial_prediction:
+                        consistent_set.add(mut)
+
+                for part in partitions:
+                    resp = _responsibility(part, consistent_set)
+                    feature_attribution = _apply_responsibility(feature_attribution, part, resp)
+
+                    if resp > 0 and \
+                            len(part) > 1 and \
+                                depth < self._search_depth:
+                        part_q.append((part, depth + 1))
 
 
-    def _fast_partition(self, responsibility: List[int], choices: List[int]) -> List[List[int]]:
-        population = choices.copy()
-        random.shuffle(population)
+                feature_attribution /= feature_attribution.abs().sum()
 
-        weights = [responsibility[i] for i in population]
-        if sum(weights) == 0: weights = [1/len(population) for _ in population]
+        return feature_attribution.clone().detach()
+
+
+    def _fast_partition(self, responsibility: torch.Tensor, part: Partition) -> List[Partition]:
+        perm = torch.randperm(len(part.elements))
         
-        remaining_weight = sum(weights)
+        population = part.elements[perm]
+        weights = responsibility[tuple(population.T)]
+        
+        #illustrate
+
+        if torch.sum(weights, dim=None) == 0: weights = torch.ones_like(weights) / len(weights)
+        print(torch.sum(weights, dim=None))
+
+        remaining_weight = torch.sum(weights, dim=None)
         target_weight = remaining_weight / self._n_partitions
         
-        zip_sorted = zip(weights, population)
-        weight_sorted, pop_sorted = zip(*sorted(zip_sorted, key=lambda x: x[0], reverse=True))
+
+        idx = torch.argsort(weights, descending=True)
+        weight_sorted, pop_sorted = weights[idx], population[idx]
+
+        eps = torch.finfo(weight_sorted.dtype).eps 
+        c = weight_sorted.cumsum(0) - eps
+
+        bin_id = torch.div(c, target_weight, rounding_mode='floor').clamp_min(0).long()
+
+        _, counts = torch.unique_consecutive(bin_id, return_counts=True)
+        groups = torch.split(pop_sorted, counts.tolist())
         
-        partitions, lp, rp, cumsum = [], 0, 0, 0
-        while rp < len(weight_sorted):
-            cumsum += weight_sorted[rp]
-            remaining_weight -= weight_sorted[rp]
-            if cumsum >= target_weight or rp == len(weight_sorted) - 1:
-                partitions.append(list(pop_sorted[lp:rp + 1]))
-                lp = rp + 1
-                cumsum = 0
+        # print("--------------")
+        # print(c)
+        # print(weight_sorted)
+        # print(bin_id)
+        # print(counts)
+        # print(groups)
+        # print("--------------")
 
-            rp += 1
-
+        partitions = [Partition(elements=g, size=len(g)) for g in groups]
         return partitions
 
 
-    def _contiguous_partition(self, resposibility, choices, depth):
+    # def _fast_partition(self, responsibility: torch.Tensor, part: Partition) -> List[Partition]:
+    #     perm = torch.randperm(part.elements)
+        
+    #     population = part.elements[perm]
+    #     weights = responsibility[population]
+
+    #     if weights.sum().item() == 0: weights = torch.full_like(weights, 1.0 / len(part))
+
+    #     remaining_weight = weights.sum()
+    #     target_weight = remaining_weight / self._n_partitions
+
+    #     idx = torch.argsort(weights, descending=True, stable=True)
+    #     weight_sorted = weights[idx]
+    #     pop_sorted    = population[idx]
+
+    #     partitions, lp = [], 0
+    #     cumsum = torch.zeros((), dtype=weight_sorted.dtype, device=weight_sorted.device)
+    #     for rp in range(weight_sorted.numel()):
+    #         w = weight_sorted[rp]
+    #         cumsum = cumsum + w
+
+    #         if (cumsum >= target_weight) or (rp == weight_sorted.numel() - 1):
+    #             block = pop_sorted[lp:rp+1]
+    #             coords = torch.stack(torch.unravel_index(block, self._original_shape), dim=-1)
+
+    #             partitions.append(Partition(
+    #                 elements = tuple(coords),
+    #                 size     = block.numel()                        # (fix: inclusive slice)
+    #             ))
+
+    #             lp = rp + 1
+    #             cumsum.zero_()
+
+    #     return partitions
+
+
+
+    def _contiguous_partition(self, resposibility, part, depth):
         ndim = len(self._original_shape)
-        split_dim = depth % ndim
+        split_dim = -1
 
         # find max and min values for dimension we are splitting
-        dmax, dmin = 0, max(self._original_shape)
-        for idx in choices:
-            coords = torch.unravel_index(torch.tensor(idx), self._original_shape)
-            
-            dmax = max(dmax, coords[split_dim])
-            dmin = min(dmin, coords[split_dim])
+        dmin, dmax = max(self._original_shape), 0
+        for i in range(ndim):
+            candidate_dim = (i + depth) % ndim
+            dmin, dmax = tuple(part.borders[candidate_dim])
 
-        # cant split this axis
-        n_splits = min((dmax - dmin), self._n_partitions)
-        split_points = sorted(list(set(random.sample(range(dmin + 1, dmax), n_splits - 1))))
-
-        bins = [[] for _ in range(n_splits - 1)]
-        for idx in choices:
-            for i, s in enumerate(split_points):
-                if s > torch.unravel_index(torch.tensor(idx), self._original_shape)[split_dim]:
-                    bins[i].append(idx)
-                    break
+            if dmax - dmin > 1:
+                split_dim = candidate_dim
+                break
         
-        print(bins)
+        n_splits = min((dmax - dmin), self._n_partitions)
+
+        split_points = random.sample(range(dmin, dmax), n_splits - 1)
+        split_borders = sorted(set([dmin, *split_points, dmax]))
+
+        bins = []
+        for i in range(len(split_borders) - 1):
+            new_borders = list(part.borders)
+            new_borders[split_dim] = (split_borders[i], split_borders[i+1])
+
+            bins.append(Partition(
+                borders = tuple(new_borders),
+                size    = math.prod(hi - lo for (lo, hi) in new_borders)
+            ))
+
         return bins
 
 
@@ -220,7 +341,7 @@ class ReX(PerturbationAttribution):
         random.shuffle(population)
         
         weights = [responsibility[i] for i in population]
-        if sum(weights) == 0: weights = [1 for _ in choices]
+        if torch.sum(weights) == 0: weights = [1 for _ in choices]
 
         target_weight = sum(weights) / self._n_partitions
         partitions = []
@@ -245,48 +366,13 @@ class ReX(PerturbationAttribution):
                 curr_partition, curr_weight = [], 0.0
 
         if curr_partition:
-            partitions.append(curr_partition)
+            partitions.append(Partition(
+                    elements = set(curr_partition),
+                    size     = len(curr_partition)
+                ))
         
         return partitions
 
-
-
-    def _explain(self, input, baseline):
-        initial_prediction = self.forward_func(input)
-        flattened_input = self._flatten(input)
-
-        n_features = flattened_input.numel()
-        feature_attribution = [0.0 for _ in range(n_features)]
-
-        for _ in range(self._n_searches):
-            # by definition, root partition contains all indices
-            part_q = deque()
-            part_q.append((list(range(n_features)), 1.0, 0))
-
-            while part_q:
-                indices, parent_resp, depth = part_q.popleft()
-                partitions = self._contiguous_partition(feature_attribution, indices, depth)
-
-                mutants = []
-                for idx_combination in _partitions_combinations(partitions):
-                    occluded_data = _occlude_data(flattened_input, idx_combination, baseline)
-                    mut = Mutant(partitions=idx_combination, data=occluded_data)
-                    mutants.append(mut)
-
-                cst_set = list(filter(
-                    lambda mut: self.forward_func(self._unflatten(mut.data)) == initial_prediction,
-                    mutants
-                ))
-
-                for part in partitions:
-                    resp = _responsibility(part, cst_set)
-                    feature_attribution = _apply_responsibility(feature_attribution, part, resp * parent_resp)
-                    if resp > 0 and \
-                            len(part) > 1 and \
-                                depth < self._search_depth:
-                        part_q.append((part, resp, depth + 1))
-
-        return self._unflatten(torch.tensor(feature_attribution))
 
 
     def multiplies_by_inputs(self) -> bool:
