@@ -223,8 +223,8 @@ class ReX(PerturbationAttribution):
                                 depth < self._search_depth:
                         part_q.append((part, depth + 1))
 
-
-                feature_attribution /= feature_attribution.abs().sum()
+                asum = feature_attribution.abs().sum()
+                feature_attribution /= asum if asum != 0 else 1
 
         return feature_attribution.clone().detach()
 
@@ -235,8 +235,6 @@ class ReX(PerturbationAttribution):
         population = part.elements[perm]
         weights = responsibility[tuple(population.T)]
         
-        #illustrate
-
         if torch.sum(weights, dim=None) == 0: weights = torch.ones_like(weights) / len(weights)
         print(torch.sum(weights, dim=None))
 
@@ -245,6 +243,8 @@ class ReX(PerturbationAttribution):
         
 
         idx = torch.argsort(weights, descending=True)
+        print("inb4", weights, population)
+        print(part.elements, part.size)
         weight_sorted, pop_sorted = weights[idx], population[idx]
 
         eps = torch.finfo(weight_sorted.dtype).eps 
@@ -255,53 +255,16 @@ class ReX(PerturbationAttribution):
         _, counts = torch.unique_consecutive(bin_id, return_counts=True)
         groups = torch.split(pop_sorted, counts.tolist())
         
-        # print("--------------")
-        # print(c)
-        # print(weight_sorted)
-        # print(bin_id)
-        # print(counts)
-        # print(groups)
-        # print("--------------")
+        print("--------------")
+        print(c)
+        print(weight_sorted)
+        print(bin_id)
+        print(counts)
+        print(groups)
+        print("--------------")
 
         partitions = [Partition(elements=g, size=len(g)) for g in groups]
         return partitions
-
-
-    # def _fast_partition(self, responsibility: torch.Tensor, part: Partition) -> List[Partition]:
-    #     perm = torch.randperm(part.elements)
-        
-    #     population = part.elements[perm]
-    #     weights = responsibility[population]
-
-    #     if weights.sum().item() == 0: weights = torch.full_like(weights, 1.0 / len(part))
-
-    #     remaining_weight = weights.sum()
-    #     target_weight = remaining_weight / self._n_partitions
-
-    #     idx = torch.argsort(weights, descending=True, stable=True)
-    #     weight_sorted = weights[idx]
-    #     pop_sorted    = population[idx]
-
-    #     partitions, lp = [], 0
-    #     cumsum = torch.zeros((), dtype=weight_sorted.dtype, device=weight_sorted.device)
-    #     for rp in range(weight_sorted.numel()):
-    #         w = weight_sorted[rp]
-    #         cumsum = cumsum + w
-
-    #         if (cumsum >= target_weight) or (rp == weight_sorted.numel() - 1):
-    #             block = pop_sorted[lp:rp+1]
-    #             coords = torch.stack(torch.unravel_index(block, self._original_shape), dim=-1)
-
-    #             partitions.append(Partition(
-    #                 elements = tuple(coords),
-    #                 size     = block.numel()                        # (fix: inclusive slice)
-    #             ))
-
-    #             lp = rp + 1
-    #             cumsum.zero_()
-
-    #     return partitions
-
 
 
     def _contiguous_partition(self, resposibility, part, depth):
