@@ -8,6 +8,13 @@ import torch
 class Test(BaseTest):
     # rename for convenience
     ts = torch.tensor
+    
+    depth_opts = range(4, 10)
+    n_partition_opts = range(2, 5)
+    n_search_opts = range(2, 5)
+    is_contiguous_opts = [False, True]
+
+    all_options = list(itertools.product(depth_opts, n_partition_opts, n_search_opts, is_contiguous_opts))
 
     @parameterized.expand([
             # inputs:                       baselines:
@@ -33,14 +40,17 @@ class Test(BaseTest):
         ((ts([1,2]), ts([3,4])),                (ts([0,0]), ts([0, 0]))),
     ])
     def test_valid_input_baseline(self, input, baseline):
-        rex = ReX(lambda x: True)
+        for o in self.all_options:
+            rex = ReX(lambda x: True)
 
-        attributions = rex.attribute(input, baseline, n_partitions=2)[0]
-        if isinstance(input, tuple): input = input[0]
-        print(attributions)
-        # Forward_func returns a constant, no responsibility in input   
-        self.assertFalse(torch.sum(attributions, dim=None))
-        self.assertEqual(attributions.size(), input.size())
+            attributions = rex.attribute(input, baseline, *o)[0]
+
+            inp_unwrapped = input
+            if isinstance(input, tuple): inp_unwrapped = input[0]
+
+            # Forward_func returns a constant, no responsibility in input   
+            self.assertFalse(torch.sum(attributions, dim=None))
+            self.assertEqual(attributions.size(), inp_unwrapped.size())
 
 
     @parameterized.expand([
@@ -50,13 +60,15 @@ class Test(BaseTest):
         (ts([[[1, 2], [3, 4]], [[5,6], [7,8]]]), (0, 1, 0))
     ])
     def test_selector_function(self, input, idx):
-        rex = ReX(lambda x: x[idx])
-        attributions = rex.attribute(input, 0)[0]
-        print(attributions)
-        self.assertTrue(attributions[idx] == 1)
+        for o in self.all_options:
+            rex = ReX(lambda x: x[idx])
 
-        attributions[idx] = 0
-        self.assertFalse(torch.sum(attributions, dim=None))
+            attributions = rex.attribute(input, 0, *o)[0]
+            print(attributions, o)
+            self.assertTrue(attributions[idx] == 1)
+
+            attributions[idx] = 0
+            self.assertFalse(torch.sum(attributions, dim=None))
 
 
     @parameterized.expand([
@@ -71,7 +83,6 @@ class Test(BaseTest):
 
         input = torch.ones(*input_shape)
         attributions = rex.attribute(input, 0, n_partitions=2, search_depth=10, n_searches=3)[0]
-        print(attributions)
         self.assertTrue(attributions[idx])
         attributions[idx] = 0
         self.assertLess(torch.sum(attributions, dim=None), 1)
