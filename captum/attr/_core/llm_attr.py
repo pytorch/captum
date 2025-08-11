@@ -573,8 +573,9 @@ class LLMAttribution(BaseLLMAttribution):
             attr_target (str): attribute towards log probability or probability.
                     Available values ["log_prob", "prob"]
                     Default: "log_prob"
+            fake_changes: fake fake changes to prompt CI/CD.
         """
-
+        print("fake_changes")
         super().__init__(attr_method, tokenizer)
 
         # shallow copy is enough to avoid modifying original instance
