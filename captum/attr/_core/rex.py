@@ -26,32 +26,38 @@ class Partition:
     def generate_mask(self, shape):
         # generates a mask for a partition (False indicates membership)
         if self._mask is not None: return self._mask
-        self._mask = torch.ones(shape, dtype=torch.bool)
+        self._mask = torch.zeros(shape, dtype=torch.bool)
 
         # non-contiguous case
         if self.elements is not None:
-            self._mask[tuple(self.elements.T)] = False
+            self._mask[tuple(self.elements.T)] = True
         
         # contiguous case
         elif self.borders is not None:
             slices = list(slice(lo, hi) for (lo, hi) in self.borders)
-            self._mask[slices] = False
+            self._mask[slices] = True
         
         return self._mask
     
     def __len__(self):
         return self.size
 
+    def __str__(self):
+        # unsafe
+        return self.generate_mask(None).to(torch.int).__str__()
         
+
 @dataclass(eq=False)
 class Mutant:
-    partitions: List[List[int]]
-    data: List[int]
+    partitions: List[Partition]
+    data: torch.Tensor
 
     # eagerly create the underlying mutant data
-    def __init__(self, partitions: List[Partition], data: torch.Tensor, neutral):
-        mask = torch.ones_like(data, dtype=torch.bool)
-        for part in partitions: mask &= part.generate_mask(mask.shape)
+    def __init__(self, partitions: List[Partition], data: torch.Tensor, neutral, shape):
+        
+        # A bitmap in the shape of the input indicating membership to a partition in this mutant
+        mask = torch.zeros(shape, dtype=torch.bool)
+        for part in partitions: mask |= part.generate_mask(mask.shape)
 
         self.partitions = partitions
         self.data = torch.where(mask, data, neutral)
@@ -69,32 +75,38 @@ def _apply_responsibility(fi, part, responsibility):
     distributed = responsibility / len(part)
     mask = part.generate_mask(fi.shape)
 
-    return torch.where(mask, fi, (fi * distributed))
+    return torch.where(mask, distributed, fi)
 
 
 def _part_to_set(partition):
     return frozenset(frozenset(p) if isinstance(p, list) else p for p in partition)
 
 
-def _calculate_responsibility(subject_partition: List, consistent_mutants: List[Mutant]) -> float:
-    witnesses = [mut.partitions for mut in consistent_mutants if subject_partition not in mut.partitions]
-    consistent_set = set(_part_to_set(part.partitions) for part in consistent_mutants)
-    
-    # a witness is valid if perturbing it results in a counterfactual 
-    # dependence on the subject partition
-    valid_witnesses = []
-    for witness in witnesses:
-        counterfactual = _part_to_set([subject_partition] + witness)
-        if not counterfactual in consistent_set:
-            valid_witnesses.append(witness) 
+def _calculate_responsibility(subject_partition: Partition,
+                              mutants: List[Mutant],
+                              recovery_mutants: List[Mutant]) -> float:
 
-    if len(valid_witnesses) == 0:
+
+    recovery_set = {_part_to_set(m.partitions) for m in recovery_mutants}
+
+    valid_witnesses = []
+    for m in mutants:
+        if subject_partition in m.partitions:
+            continue
+        W = m.partitions
+        W_set = _part_to_set(W)
+        W_plus_P_set = _part_to_set([subject_partition] + W)
+
+        # W alone does NOT recover, but W ∪ {P} DOES recover.
+        if (W_set not in recovery_set) and (W_plus_P_set in recovery_set):
+            valid_witnesses.append(W)
+
+    if not valid_witnesses:
         return 0.0
 
-    min_mutant = min(valid_witnesses, key=len)
-    minpart = len(min_mutant)
-
-    return 1.0 / (1.0 + float(minpart))
+    k = min(len(w) for w in valid_witnesses)
+    # Responsibility per your definition: 1 / (1 + k)
+    return 1.0 / (1.0 + float(k))
 
 
 def _generate_indices(ts):
@@ -186,19 +198,17 @@ class ReX(PerturbationAttribution):
 
 
     def _explain(self, input, baseline):
-        self._original_shape = input.shape
+        self._shape = input.shape
         self._size = input.numel()
 
         initial_prediction = self.forward_func(input)
         attribution = torch.full_like(input, 1.0/input.numel(), dtype=torch.float32)
 
         initial_partition = Partition(
-            borders     = list((0, top) for top in self._original_shape),
+            borders     = list((0, top) for top in self._shape),
             elements    = _generate_indices(input),
             size        = self._size
         )
-        prev_depth = 0
-
         for _ in range(self._n_searches):
             Q = deque()
             Q.append((initial_partition, 0))
@@ -208,24 +218,19 @@ class ReX(PerturbationAttribution):
                 partitions = self._contiguous_partition(prev_part, depth) \
                     if self._is_contiguous else self._partition(prev_part, attribution)
 
-                mutants = [Mutant(ps, input, baseline) for ps in _powerset(partitions)]
+                
+                mutants = [Mutant(ps, input, baseline, self._shape) for ps in _powerset(partitions)]
                 consistent_mutants = [mut for mut in mutants if self.forward_func(mut.data) == initial_prediction]
 
+                prev_part.generate_mask(self._shape)
                 for part in partitions:
-                    resp        = _calculate_responsibility(part, consistent_mutants)
+                    resp        = _calculate_responsibility(part, mutants, consistent_mutants)
                     attribution = _apply_responsibility(attribution, part, resp)
 
-                    if resp > 0 and len(part) > 1 and self._max_depth > depth:
+                    if resp == 1 and len(part) > 1 and self._max_depth > depth:
                         Q.append((part, depth + 1))
+                
 
-                if depth != prev_depth:
-                    asum = attribution.abs().sum()
-                    attribution /= asum if asum != 0 else 1
-
-                    prev_depth = depth
-
-        asum = attribution.abs().sum()
-        attribution /= asum if asum != 0 else 1
         return attribution.clone().detach()
 
 
@@ -256,11 +261,11 @@ class ReX(PerturbationAttribution):
 
 
     def _contiguous_partition(self, part, depth):
-        ndim = len(self._original_shape)
+        ndim = len(self._shape)
         split_dim = -1
 
         # find a dimension we can split 
-        dmin, dmax = max(self._original_shape), 0
+        dmin, dmax = max(self._shape), 0
         for i in range(ndim):
             candidate_dim = (i + depth) % ndim
             dmin, dmax = tuple(part.borders[candidate_dim])

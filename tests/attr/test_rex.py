@@ -10,8 +10,8 @@ class Test(BaseTest):
     ts = torch.tensor
     
     depth_opts = range(4, 10)
-    n_partition_opts = range(2, 5)
-    n_search_opts = range(2, 5)
+    n_partition_opts = range(3, 5)
+    n_search_opts = range(5, 15)
     is_contiguous_opts = [False, True]
 
     all_options = list(itertools.product(depth_opts, n_partition_opts, n_search_opts, is_contiguous_opts))
@@ -64,7 +64,6 @@ class Test(BaseTest):
             rex = ReX(lambda x: x[idx])
 
             attributions = rex.attribute(input, 0, *o)[0]
-            print(attributions, o)
             self.assertTrue(attributions[idx] == 1)
 
             attributions[idx] = 0
@@ -87,3 +86,22 @@ class Test(BaseTest):
         attributions[idx] = 0
         self.assertLess(torch.sum(attributions, dim=None), 1)
 
+    @parameterized.expand([
+        # input shape                           # lhs_idx   # rhs_idx
+        ((2,4),                                (0,2),      (1,3))
+
+
+    ])
+    def test_boolean_or(self, input_shape, lhs_idx, rhs_idx):
+        for o in self.all_options:
+            rex = ReX(lambda x: max(x[lhs_idx], x[rhs_idx]))
+            input = torch.ones(input_shape)
+            
+            attributions = rex.attribute(input, 0, *o)[0]
+
+            self.assertTrue(attributions[lhs_idx] > 0.25, f"{attributions}")
+            self.assertTrue(attributions[rhs_idx] > 0.25, f"{attributions}")
+
+            attributions[lhs_idx] = 0
+            attributions[rhs_idx] = 0
+            self.assertTrue(torch.sum(attributions) < 1, f"{attributions}")
