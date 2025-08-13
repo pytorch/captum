@@ -5,7 +5,19 @@
 import itertools
 import math
 import warnings
-from typing import Any, Callable, cast, Iterable, List, Optional, Sequence, Tuple, Union
+from collections import defaultdict
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import torch
 from captum._utils.common import (
@@ -766,13 +778,53 @@ class ShapleyValueSampling(PerturbationAttribution):
         formatted_attr = _format_output(is_inputs_tuple, attrib)
         return formatted_attr
 
+    def _update_current_tensors(
+        self,
+        current_tensors: Tuple[Tensor, ...],
+        input_tensors: Tuple[Tensor, ...],
+        feature_index: int,
+        mask: Tuple[Tensor, ...],
+        feat_tensor_index_map: Dict[int, List[int]],
+    ) -> Tuple[Tensor, ...]:
+        feat_list = feat_tensor_index_map[feature_index]
+        output_tensors = []
+        for i in range(len(current_tensors)):
+            if i in feat_list:
+                output_tensors.append(
+                    current_tensors[i]
+                    * (~(mask[i] == feature_index)).to(current_tensors[i].dtype)
+                    + input_tensors[i]
+                    * (mask[i] == feature_index).to(input_tensors[i].dtype)
+                )
+
+            else:
+                output_tensors.append(current_tensors[i])
+        return tuple(output_tensors)
+
+    def _construct_selected_mask(
+        self,
+        feature_index: int,
+        mask: Tuple[Tensor, ...],
+        empty_mask: Tuple[Tensor, ...],
+        feat_tensor_index_map: Dict[int, List[int]],
+        device: torch.device,
+    ) -> Tuple[Tensor, ...]:
+        feat_list = feat_tensor_index_map[feature_index]
+        output_mask = []
+        for i in range(len(mask)):
+            if i in feat_list:
+                output_mask.append((mask[i] == feature_index).to(device).unsqueeze(0))
+            else:
+                output_mask.append(empty_mask[i])
+        return tuple(output_mask)
+
     def _perturbation_generator(
         self,
         inputs: Tuple[Tensor, ...],
         additional_args: Optional[Tuple[object, ...]],
         target: TargetType,
         baselines: Tuple[Tensor, ...],
-        input_masks: TensorOrTupleOfTensorsGeneric,
+        input_masks: Tuple[Tensor, ...],
         feature_permutation: Sequence[int],
         perturbations_per_eval: int,
     ) -> Iterable[Tuple[Tuple[Tensor, ...], object, TargetType, Tuple[Tensor, ...]]]:
@@ -792,29 +844,45 @@ class ShapleyValueSampling(PerturbationAttribution):
             if additional_args is not None
             else None
         )
+        feat_tensor_index_map = defaultdict(list)
+        for i in range(len(input_masks)):
+            for elem in input_masks[i].view(-1):
+                feat_tensor_index_map[elem.item()].append(i)
+        empty_masks = tuple(torch.zeros_like(elem).unsqueeze(0) for elem in input_masks)
+
         target_repeated = _expand_target(target, perturbations_per_eval)
         for i in range(len(feature_permutation)):
-            current_tensors = tuple(
-                current * (~(mask == feature_permutation[i])).to(current.dtype)
-                + input * (mask == feature_permutation[i]).to(input.dtype)
-                for input, current, mask in zip(inputs, current_tensors, input_masks)
+            current_tensors = self._update_current_tensors(
+                current_tensors=current_tensors,
+                input_tensors=inputs,
+                feature_index=feature_permutation[i],
+                mask=input_masks,
+                feat_tensor_index_map=feat_tensor_index_map,
             )
             current_tensors_list.append(current_tensors)
             current_mask_list.append(
-                tuple(
-                    (mask == feature_permutation[i]).to(inputs[0].device)
-                    for mask in input_masks
+                self._construct_selected_mask(
+                    feature_index=feature_permutation[i],
+                    mask=input_masks,
+                    empty_mask=empty_masks,
+                    feat_tensor_index_map=feat_tensor_index_map,
+                    device=inputs[0].device,
                 )
             )
+
             if len(current_tensors_list) == perturbations_per_eval:
-                combined_inputs = tuple(
-                    torch.cat(aligned_tensors, dim=0)
-                    for aligned_tensors in zip(*current_tensors_list)
-                )
-                combined_masks = tuple(
-                    torch.stack(aligned_masks, dim=0)
-                    for aligned_masks in zip(*current_mask_list)
-                )
+                if len(current_tensors_list) > 1:
+                    combined_inputs = tuple(
+                        torch.cat(aligned_tensors, dim=0)
+                        for aligned_tensors in zip(*current_tensors_list)
+                    )
+                    combined_masks = tuple(
+                        torch.cat(aligned_masks, dim=0)
+                        for aligned_masks in zip(*current_mask_list)
+                    )
+                else:
+                    combined_inputs = current_tensors_list[0]
+                    combined_masks = current_mask_list[0]
                 yield (
                     combined_inputs,
                     additional_args_repeated,
@@ -840,7 +908,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                 for aligned_tensors in zip(*current_tensors_list)
             )
             combined_masks = tuple(
-                torch.stack(aligned_masks, dim=0)
+                torch.cat(aligned_masks, dim=0)
                 for aligned_masks in zip(*current_mask_list)
             )
             yield (
