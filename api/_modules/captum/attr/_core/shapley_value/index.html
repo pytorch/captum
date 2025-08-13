@@ -37,7 +37,19 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">cast</span><span class="p">,</span>
+    <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">Iterable</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">Sequence</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">Union</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">captum._utils.common</span> <span class="kn">import</span> <span class="p">(</span>
@@ -806,13 +818,53 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">formatted_attr</span> <span class="o">=</span> <span class="n">_format_output</span><span class="p">(</span><span class="n">is_inputs_tuple</span><span class="p">,</span> <span class="n">attrib</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">formatted_attr</span>
 
+    <span class="k">def</span> <span class="nf">_update_current_tensors</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">current_tensors</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">input_tensors</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">feature_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">mask</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">feat_tensor_index_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="n">feat_list</span> <span class="o">=</span> <span class="n">feat_tensor_index_map</span><span class="p">[</span><span class="n">feature_index</span><span class="p">]</span>
+        <span class="n">output_tensors</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">current_tensors</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">feat_list</span><span class="p">:</span>
+                <span class="n">output_tensors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">current_tensors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="o">*</span> <span class="p">(</span><span class="o">~</span><span class="p">(</span><span class="n">mask</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">feature_index</span><span class="p">))</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">current_tensors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="n">input_tensors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="o">*</span> <span class="p">(</span><span class="n">mask</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">feature_index</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">input_tensors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">output_tensors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_tensors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output_tensors</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_construct_selected_mask</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">feature_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">mask</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">empty_mask</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">feat_tensor_index_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+        <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="n">feat_list</span> <span class="o">=</span> <span class="n">feat_tensor_index_map</span><span class="p">[</span><span class="n">feature_index</span><span class="p">]</span>
+        <span class="n">output_mask</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mask</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">feat_list</span><span class="p">:</span>
+                <span class="n">output_mask</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">mask</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">feature_index</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">output_mask</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">empty_mask</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output_mask</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">_perturbation_generator</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
         <span class="n">additional_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
         <span class="n">target</span><span class="p">:</span> <span class="n">TargetType</span><span class="p">,</span>
         <span class="n">baselines</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
-        <span class="n">input_masks</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
+        <span class="n">input_masks</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
         <span class="n">feature_permutation</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">object</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]:</span>
@@ -832,29 +884,45 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="k">if</span> <span class="n">additional_args</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
             <span class="k">else</span> <span class="kc">None</span>
         <span class="p">)</span>
+        <span class="n">feat_tensor_index_map</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">input_masks</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">input_masks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">feat_tensor_index_map</span><span class="p">[</span><span class="n">elem</span><span class="o">.</span><span class="n">item</span><span class="p">()]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">empty_masks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">input_masks</span><span class="p">)</span>
+
         <span class="n">target_repeated</span> <span class="o">=</span> <span class="n">_expand_target</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">perturbations_per_eval</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">feature_permutation</span><span class="p">)):</span>
-            <span class="n">current_tensors</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-                <span class="n">current</span> <span class="o">*</span> <span class="p">(</span><span class="o">~</span><span class="p">(</span><span class="n">mask</span> <span class="o">==</span> <span class="n">feature_permutation</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">current</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-                <span class="o">+</span> <span class="nb">input</span> <span class="o">*</span> <span class="p">(</span><span class="n">mask</span> <span class="o">==</span> <span class="n">feature_permutation</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-                <span class="k">for</span> <span class="nb">input</span><span class="p">,</span> <span class="n">current</span><span class="p">,</span> <span class="n">mask</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">current_tensors</span><span class="p">,</span> <span class="n">input_masks</span><span class="p">)</span>
+            <span class="n">current_tensors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_current_tensors</span><span class="p">(</span>
+                <span class="n">current_tensors</span><span class="o">=</span><span class="n">current_tensors</span><span class="p">,</span>
+                <span class="n">input_tensors</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
+                <span class="n">feature_index</span><span class="o">=</span><span class="n">feature_permutation</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                <span class="n">mask</span><span class="o">=</span><span class="n">input_masks</span><span class="p">,</span>
+                <span class="n">feat_tensor_index_map</span><span class="o">=</span><span class="n">feat_tensor_index_map</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">current_tensors_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_tensors</span><span class="p">)</span>
             <span class="n">current_mask_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="nb">tuple</span><span class="p">(</span>
-                    <span class="p">(</span><span class="n">mask</span> <span class="o">==</span> <span class="n">feature_permutation</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-                    <span class="k">for</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">input_masks</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_construct_selected_mask</span><span class="p">(</span>
+                    <span class="n">feature_index</span><span class="o">=</span><span class="n">feature_permutation</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                    <span class="n">mask</span><span class="o">=</span><span class="n">input_masks</span><span class="p">,</span>
+                    <span class="n">empty_mask</span><span class="o">=</span><span class="n">empty_masks</span><span class="p">,</span>
+                    <span class="n">feat_tensor_index_map</span><span class="o">=</span><span class="n">feat_tensor_index_map</span><span class="p">,</span>
+                    <span class="n">device</span><span class="o">=</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
+
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">current_tensors_list</span><span class="p">)</span> <span class="o">==</span> <span class="n">perturbations_per_eval</span><span class="p">:</span>
-                <span class="n">combined_inputs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-                    <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">aligned_tensors</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-                    <span class="k">for</span> <span class="n">aligned_tensors</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">current_tensors_list</span><span class="p">)</span>
-                <span class="p">)</span>
-                <span class="n">combined_masks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-                    <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">aligned_masks</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-                    <span class="k">for</span> <span class="n">aligned_masks</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">current_mask_list</span><span class="p">)</span>
-                <span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">current_tensors_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">combined_inputs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                        <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">aligned_tensors</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">aligned_tensors</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">current_tensors_list</span><span class="p">)</span>
+                    <span class="p">)</span>
+                    <span class="n">combined_masks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                        <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">aligned_masks</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">aligned_masks</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">current_mask_list</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">combined_inputs</span> <span class="o">=</span> <span class="n">current_tensors_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">combined_masks</span> <span class="o">=</span> <span class="n">current_mask_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="k">yield</span> <span class="p">(</span>
                     <span class="n">combined_inputs</span><span class="p">,</span>
                     <span class="n">additional_args_repeated</span><span class="p">,</span>
@@ -880,7 +948,7 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="k">for</span> <span class="n">aligned_tensors</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">current_tensors_list</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="n">combined_masks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">aligned_masks</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">aligned_masks</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">aligned_masks</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">current_mask_list</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="k">yield</span> <span class="p">(</span>
