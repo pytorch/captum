@@ -150,7 +150,8 @@ class ReX(PerturbationAttribution):
                   search_depth: int = 10,
                   n_partitions: int = 4,
                   n_searches: int = 5,
-                  contiguous_partitioning: bool = False) -> TensorOrTupleOfTensorsGeneric:
+                  contiguous_partitioning: bool = False,
+                  merge: bool = True) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Args:
             inputs:
@@ -178,6 +179,7 @@ class ReX(PerturbationAttribution):
         self._max_depth = search_depth
         self._n_searches = n_searches
         self._is_contiguous = contiguous_partitioning
+        self._merge = merge
 
         is_input_tuple = isinstance(inputs, tuple)
         is_baseline_tuple = isinstance(baselines, tuple)
@@ -202,6 +204,8 @@ class ReX(PerturbationAttribution):
         self._size = input.numel()
 
         initial_prediction = self.forward_func(input)
+
+        prev_attribution = torch.full_like(input, 0.0, dtype=torch.float32)
         attribution = torch.full_like(input, 1.0/input.numel(), dtype=torch.float32)
 
         initial_partition = Partition(
@@ -209,7 +213,8 @@ class ReX(PerturbationAttribution):
             elements    = _generate_indices(input),
             size        = self._size
         )
-        for _ in range(self._n_searches):
+
+        for i in range(1, self._n_searches + 1):
             Q = deque()
             Q.append((initial_partition, 0))
 
@@ -229,7 +234,12 @@ class ReX(PerturbationAttribution):
 
                     if resp == 1 and len(part) > 1 and self._max_depth > depth:
                         Q.append((part, depth + 1))
+                    else:
+                        attribution = _apply_responsibility(attribution, part, resp)
                 
+            if self._merge: 
+                prev_attribution += (1/i) * (attribution - prev_attribution)
+                attribution = prev_attribution
 
         return attribution.clone().detach()
 
@@ -244,14 +254,14 @@ class ReX(PerturbationAttribution):
         target_weight = torch.sum(weights) / self._n_partitions
 
         # sort for greedy selection
-        idx = torch.argsort(weights, descending=True)
+        idx = torch.argsort(weights, descending=False)
         weight_sorted, pop_sorted = weights[idx], population[idx]
 
         # cumulative sum of weights / weight per bucket rounded down gives us bucket ids
         eps = torch.finfo(weight_sorted.dtype).eps 
-        c = weight_sorted.cumsum(0) - eps
+        c = weight_sorted.cumsum(0) + eps
         bin_id = torch.div(c, target_weight, rounding_mode='floor').clamp_min(0).long()
-
+        
         # count elements in each bucket, and split input accordingly
         _, counts = torch.unique_consecutive(bin_id, return_counts=True)
         groups = torch.split(pop_sorted, counts.tolist())

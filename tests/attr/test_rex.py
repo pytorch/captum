@@ -3,18 +3,50 @@ from captum.attr._core.rex import *
 from captum.testing.helpers.basic import BaseTest
 from parameterized import parameterized
 
+import random
+import statistics
 import torch
+import torch.nn.functional as F
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def visualize_tensor(tensor, cmap='viridis'):
+    """
+    Simple heatmap visualizer for 2D PyTorch tensors.
+    Automatically moves tensor to CPU and detaches from graph.
+    """
+    arr = tensor.detach().cpu().numpy()
+    plt.imshow(arr, cmap=cmap)
+    plt.colorbar()
+    plt.show()
+
 
 class Test(BaseTest):
     # rename for convenience
     ts = torch.tensor
     
     depth_opts = range(4, 10)
-    n_partition_opts = range(3, 5)
-    n_search_opts = range(5, 15)
+    n_partition_opts = range(4, 5)
+    n_search_opts = range(10, 15)
     is_contiguous_opts = [False, True]
 
     all_options = list(itertools.product(depth_opts, n_partition_opts, n_search_opts, is_contiguous_opts))
+
+    def _generate_gaussian_pdf(self, shape, mean):
+        k = len(shape)
+
+        cov = 0.1 * torch.eye(k) * statistics.mean(shape)
+        dist = torch.distributions.MultivariateNormal(mean, covariance_matrix=cov)
+
+        grids = torch.meshgrid(
+            *[torch.arange(n, dtype=torch.float64) for n in shape],
+            indexing='ij'
+        )
+        coords = torch.stack(grids, dim=-1).reshape(-1, k)
+
+        pdf_vals = torch.exp(dist.log_prob(coords))
+        return pdf_vals.reshape(*shape)
 
     @parameterized.expand([
             # inputs:                       baselines:
@@ -43,7 +75,7 @@ class Test(BaseTest):
         for o in self.all_options:
             rex = ReX(lambda x: True)
 
-            attributions = rex.attribute(input, baseline, *o)[0]
+            attributions = rex.attribute(input, baseline, *o, merge=False)[0]
 
             inp_unwrapped = input
             if isinstance(input, tuple): inp_unwrapped = input[0]
@@ -63,7 +95,7 @@ class Test(BaseTest):
         for o in self.all_options:
             rex = ReX(lambda x: x[idx])
 
-            attributions = rex.attribute(input, 0, *o)[0]
+            attributions = rex.attribute(input, 0, *o, merge=False)[0]
             self.assertTrue(attributions[idx] == 1)
 
             attributions[idx] = 0
@@ -81,27 +113,84 @@ class Test(BaseTest):
         rex = ReX(lambda x: x[idx])
 
         input = torch.ones(*input_shape)
-        attributions = rex.attribute(input, 0, n_partitions=2, search_depth=10, n_searches=3)[0]
+        attributions = rex.attribute(input, 0, n_partitions=2, search_depth=10, n_searches=3, merge=False)[0]
         self.assertTrue(attributions[idx])
         attributions[idx] = 0
         self.assertLess(torch.sum(attributions, dim=None), 1)
 
+
     @parameterized.expand([
         # input shape                           # lhs_idx   # rhs_idx
         ((2,4),                                (0,2),      (1,3))
-
-
     ])
     def test_boolean_or(self, input_shape, lhs_idx, rhs_idx):
         for o in self.all_options:
             rex = ReX(lambda x: max(x[lhs_idx], x[rhs_idx]))
             input = torch.ones(input_shape)
             
-            attributions = rex.attribute(input, 0, *o)[0]
+            attributions = rex.attribute(input, 0, *o, merge=False)[0]
 
-            self.assertTrue(attributions[lhs_idx] > 0.25, f"{attributions}")
-            self.assertTrue(attributions[rhs_idx] > 0.25, f"{attributions}")
+            self.assertTrue(attributions[lhs_idx] == 1.0, f"{attributions}")
+            self.assertTrue(attributions[rhs_idx] == 1.0, f"{attributions}")
 
             attributions[lhs_idx] = 0
             attributions[rhs_idx] = 0
             self.assertTrue(torch.sum(attributions) < 1, f"{attributions}")
+
+
+    @parameterized.expand([
+        # input shape                           # lhs_idx   # rhs_idx
+        ((2,4),                                (0,2),      (0,3))
+    ])
+    def test_boolean_and(self, input_shape, lhs_idx, rhs_idx):
+        for i, o in enumerate(self.all_options):
+            rex = ReX(lambda x: min(x[lhs_idx], x[rhs_idx]))
+            input = torch.ones(input_shape)
+            
+            attributions = rex.attribute(input, 0, *o, merge=False)[0]
+
+            self.assertTrue(attributions[lhs_idx] == 0.5, f"{attributions}, {i}, {o}")
+            self.assertTrue(attributions[rhs_idx] == 0.5, f"{attributions}, {i}, {o}")
+
+            attributions[lhs_idx] = 0
+            attributions[rhs_idx] = 0
+            self.assertTrue(torch.sum(attributions) < 1, f"{attributions}")
+
+
+    @parameterized.expand([
+        # shape                         # mean
+        # ((10,10),                        ts([4, 6])),
+        # ((50,50),                      ts([25, 25])),
+        # ((20,20),                      ts([10, 10])),
+        ((50, 50),)
+    ])
+    def test_gaussian_recovery(self, shape):
+        random.seed()
+        p = torch.zeros(shape)
+        for _ in range(3):
+            center = self.ts([int(random.random() * dim) for dim in shape])
+            p += self._generate_gaussian_pdf(shape, center)
+
+        thresh = math.sqrt(torch.mean(p))
+        def _forward(inp):
+            return 1 if torch.sum(inp, dim=None) > thresh else 0
+        
+        rex = ReX(_forward)
+        for o in self.all_options[:20]:
+            # o = (o[0], o[1], 20, o[3])
+
+            attributions = rex.attribute(p, 0, *o, merge=True)[0]
+            eps = 1e-12
+
+            attributions += eps
+            attrib_norm = attributions / torch.sum(attributions)
+
+            p += eps
+            p = p/torch.sum(p)
+
+            # visualize_tensor(p)
+            # visualize_tensor(attrib_norm)
+            # visualize_tensor(p - attrib_norm)
+            # print(F.kl_div(p.log(), attrib_norm))
+            
+            self.assertLess(F.kl_div(p.log(), attrib_norm), 0.1)
