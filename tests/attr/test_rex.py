@@ -12,10 +12,6 @@ import matplotlib.pyplot as plt
 
 
 def visualize_tensor(tensor, cmap='viridis'):
-    """
-    Simple heatmap visualizer for 2D PyTorch tensors.
-    Automatically moves tensor to CPU and detaches from graph.
-    """
     arr = tensor.detach().cpu().numpy()
     plt.imshow(arr, cmap=cmap)
     plt.colorbar()
@@ -27,7 +23,7 @@ class Test(BaseTest):
     ts = torch.tensor
     
     depth_opts = range(4, 10)
-    n_partition_opts = range(4, 5)
+    n_partition_opts = range(4, 7)
     n_search_opts = range(10, 15)
     is_contiguous_opts = [False, True]
 
@@ -105,8 +101,8 @@ class Test(BaseTest):
     @parameterized.expand([
         # input shape                             # important idx
         ((4,4),                                   (0,0)),
-        # ((12, 12, 12),                            (1,2,1)),
-        # ((12, 12, 12, 6),                         (1,1,4,1)),
+        ((12, 12, 12),                            (1,2,1)),
+        ((12, 12, 12, 6),                         (1,1,4,1)),
         ((1920, 1080),                            (1, 1)) # image-like
     ])
     def test_selector_function_large_input(self, input_shape, idx):
@@ -159,38 +155,46 @@ class Test(BaseTest):
 
     @parameterized.expand([
         # shape                         # mean
-        # ((10,10),                        ts([4, 6])),
-        # ((50,50),                      ts([25, 25])),
-        # ((20,20),                      ts([10, 10])),
-        ((50, 50),)
+        ((30,30),),
+        ((50, 50),),
+        ((100,100),)
     ])
     def test_gaussian_recovery(self, shape):
         random.seed()
+        eps = 1e-12
+        
         p = torch.zeros(shape)
         for _ in range(3):
             center = self.ts([int(random.random() * dim) for dim in shape])
             p += self._generate_gaussian_pdf(shape, center)
+        
+        p += eps
+        p = p/torch.sum(p)
 
         thresh = math.sqrt(torch.mean(p))
         def _forward(inp):
-            return 1 if torch.sum(inp, dim=None) > thresh else 0
+            return 1 if torch.sum(inp) > thresh else 0
         
         rex = ReX(_forward)
-        for o in self.all_options[:20]:
-            # o = (o[0], o[1], 20, o[3])
+        for b in self.n_partition_opts:
+            attributions = rex.attribute(p, 
+                                         0, 
+                                         n_partitions=b,
+                                         search_depth=10, 
+                                         n_searches=25, 
+                                         contiguous_partitioning=True, 
+                                         merge=True)[0]
 
-            attributions = rex.attribute(p, 0, *o, merge=True)[0]
-            eps = 1e-12
 
             attributions += eps
             attrib_norm = attributions / torch.sum(attributions)
 
-            p += eps
-            p = p/torch.sum(p)
-
             # visualize_tensor(p)
             # visualize_tensor(attrib_norm)
             # visualize_tensor(p - attrib_norm)
-            # print(F.kl_div(p.log(), attrib_norm))
+
+            mid = 0.5 * (p + attrib_norm)
+            jsd = 0.5 * F.kl_div(p.log(), mid, reduction="sum")  \
+                + 0.5 * F.kl_div(attrib_norm.log(), mid, reduction="sum")
             
-            self.assertLess(F.kl_div(p.log(), attrib_norm), 0.1)
+            self.assertLess(jsd, 0.1)
