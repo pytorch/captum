@@ -12,6 +12,8 @@ Captum API Reference
    :caption: API Reference
 
    attribution
+   gnn_explainer
+   pg_explainer
    llm_attr
    noise_tunnel
    layer
