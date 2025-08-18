@@ -41,10 +41,6 @@ class Partition:
     
     def __len__(self):
         return self.size
-
-    def __str__(self):
-        # unsafe
-        return self.generate_mask(None).to(torch.int).__str__()
         
 
 @dataclass(eq=False)
@@ -78,24 +74,19 @@ def _apply_responsibility(fi, part, responsibility):
     return torch.where(mask, distributed, fi)
 
 
-def _part_to_set(partition):
-    return frozenset(frozenset(p) if isinstance(p, list) else p for p in partition)
-
-
 def _calculate_responsibility(subject_partition: Partition,
                               mutants: List[Mutant],
-                              recovery_mutants: List[Mutant]) -> float:
-
-
-    recovery_set = {_part_to_set(m.partitions) for m in recovery_mutants}
+                              consistent_mutants: List[Mutant]) -> float:
+    recovery_set = {frozenset(m.partitions) for m in consistent_mutants}
 
     valid_witnesses = []
     for m in mutants:
         if subject_partition in m.partitions:
             continue
         W = m.partitions
-        W_set = _part_to_set(W)
-        W_plus_P_set = _part_to_set([subject_partition] + W)
+        
+        W_set = frozenset(W)
+        W_plus_P_set = frozenset([subject_partition] + W)
 
         # W alone does NOT recover, but W ∪ {P} DOES recover.
         if (W_set not in recovery_set) and (W_plus_P_set in recovery_set):
@@ -105,35 +96,36 @@ def _calculate_responsibility(subject_partition: Partition,
         return 0.0
 
     k = min(len(w) for w in valid_witnesses)
-    # Responsibility per your definition: 1 / (1 + k)
     return 1.0 / (1.0 + float(k))
 
 
 def _generate_indices(ts):
+    # return a tensor containing all indices in the input shape
     return torch.tensor(tuple(itertools.product(*(range(s) for s in ts.shape))), dtype=torch.long)
 
 
 class ReX(PerturbationAttribution):
     """
-    A perturbation-based approach to computing attribution, based on the
+    A perturbation-based approach to computing attribution, derived from the
     Halpern-Pearl definition of Actual Causality[1]. 
     
-    ReX works by partitioning the input space, and masking each partition with the baseline value. It is fully 
-    model agnostic, and relies only on a 'forward_func' returning a scalar.
-
-    Intuitively, if masking a partition changes the prediction of the model, then that partition has 
-    some responsibility (attribution > 0). Such partially masked partitions are called
-    mutants. The responsibility of a partition is defined as 1/(1+k) where
-    k is a minimum number of occluded partitions in a mutant which make forward_func's 
-    output dependednt on the subject partition.
+    ReX works through a recursive search on the input to find areas that are 
+    most responsible[3] for a models prediction. ReX splits an input into "partitions", 
+    and masks combinations of these partitions with baseline (neutral) values
+    to form "mutants". 
     
-    Partitions with nonzero responsibility are recusrively re-partitioned and masked in a search.
-    The algorithm runs multiple such searches, where each subsequent search uses the previously 
-    computed attribution map as a heuristic for partitioning.
+    Intuitively, where masking a partition never changes a models
+    prediction, that partition is not responsible for the output. Conversely, where some 
+    combination of masked partitions changes the prediction, each partition has responsibility 1/(1+k), where
+    k is the minimal number of *other* masked partitions required to create a dependence on a partition.
+
+    Responsible partitions are recursively searched to refine responsibility estimates, and results
+    are (optionally) merged to produce the final attribution map.
 
 
     [1] - halpern 06
     [2] - rex paper
+    [3] - responsibility and blame
     """
     def __init__(self, forward_func):
         r"""
@@ -155,38 +147,51 @@ class ReX(PerturbationAttribution):
         r"""
         Args:
             inputs:
-                An input or tuple of inputs whose corresponding output is to be explained. Each input
+                An input or tuple of inputs to be explain. Each input
                 must be of the shape expected by the forward_func. Where multiple examples are 
                 provided, they must be listed in a tuple.
             
             baselines: 
-                A neutral values to be used as occlusion values. Where a scalar is provided, it is used
-                as the masking value at each index. Where a tensor is provided, values are masked at
-                corresponding indices. Where a tuple of tensors is provided, it must be of the same length
-                as inputs; then baseline and input tensors are matched element-wise and treated as before.
+                A neutral values to be used as occlusion values. Where a scalar or tensor is provided,
+                they are broadcast to the input shape. Where tuples are provided, they are paired element-wise,
+                and must match the structure of the input
 
             search_depth (optional):
-                The maximum depth to which ReX will search. Where one is not provided, the default is 4
+                The maximum depth to which ReX will refine responsibility estimates for causes.
             
             n_partitions (optional):
-                The number of partitions to be made out of the input at each search step.
-                This must be at most hte size of each input, and at least 1.
+                The maximum number of partitions to be made out of the input at each search step.
+                At least 1, and no larger than the partition size. Where ``contiguous partitioning`` is
+                set to False, partitions are created using previous attribution maps as heuristics.  
+
+            n_searches (optional):
+                The number of times the search is to be ran.
+                
+            contiguous_partitioning (optional):
+                If True, assumes locality of attribution and splits partitions contiguously along a dimension
+                (uselful for images). Otherwise, partitions are selected for element-wise using a greedy heuristic
+                approach.
+
+            merge (optional):
+                If True, return the average of all search results across all n_searches. Otherwise return the 
+                final search attribution without merging.
         """
+
         inputs, baselines = _format_input_baseline(inputs, baselines)
         _validate_input(inputs, baselines)
 
-        self._n_partitions = n_partitions
-        self._max_depth = search_depth
-        self._n_searches = n_searches
+        self._n_partitions  = n_partitions
+        self._max_depth     = search_depth
+        self._n_searches    = n_searches
         self._is_contiguous = contiguous_partitioning
-        self._merge = merge
+        self._merge         = merge
 
         is_input_tuple = isinstance(inputs, tuple)
         is_baseline_tuple = isinstance(baselines, tuple)
 
         attributions = []
 
-        # match inputs and baselines, explain
+        # broadcast baselines, explain
         if is_input_tuple and is_baseline_tuple:
             for input, baseline in zip(inputs, baselines):
                 attributions.append(self._explain(input, baseline))
@@ -203,7 +208,7 @@ class ReX(PerturbationAttribution):
         self._shape = input.shape
         self._size = input.numel()
 
-        initial_prediction = self.forward_func(input)
+        prediction = self.forward_func(input)
 
         prev_attribution = torch.full_like(input, 0.0, dtype=torch.float32)
         attribution = torch.full_like(input, 1.0/input.numel(), dtype=torch.float32)
@@ -223,14 +228,11 @@ class ReX(PerturbationAttribution):
                 partitions = self._contiguous_partition(prev_part, depth) \
                     if self._is_contiguous else self._partition(prev_part, attribution)
 
-                
-                mutants = [Mutant(ps, input, baseline, self._shape) for ps in _powerset(partitions)]
-                consistent_mutants = [mut for mut in mutants if self.forward_func(mut.data) == initial_prediction]
+                mutants = [Mutant(part, input, baseline, self._shape) for part in _powerset(partitions)]
+                consistent_mutants = [mut for mut in mutants if self.forward_func(mut.data) == prediction]
 
-                prev_part.generate_mask(self._shape)
                 for part in partitions:
                     resp        = _calculate_responsibility(part, mutants, consistent_mutants)
-                    attribution = _apply_responsibility(attribution, part, resp)
 
                     if resp == 1 and len(part) > 1 and self._max_depth > depth:
                         Q.append((part, depth + 1))
@@ -285,7 +287,6 @@ class ReX(PerturbationAttribution):
                 break
 
         if split_dim == -1: return [part]
-        
         n_splits = min((dmax - dmin), self._n_partitions) - 1
 
         # drop splits randomly
