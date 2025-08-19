@@ -128,6 +128,10 @@ class GuidedBackprop(ModifiedReluGradientAttribution):
     Warning: Ensure that all ReLU operations in the forward function of the
     given model are performed using a module (nn.module.ReLU).
     If nn.functional.ReLU is used, gradients are not overridden appropriately.
+
+    Warning: This method may produce attributions that do not reflect your model
+    parameters. You can verify this by comparing the attributions on an untrained model.
+    More details about sanity checks: https://arxiv.org/pdf/1810.03292.pdf
     """
 
     def __init__(self, model: Module) -> None:
