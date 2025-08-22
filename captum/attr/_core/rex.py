@@ -23,10 +23,10 @@ class Partition:
         
         self._mask = None
 
-    def generate_mask(self, shape):
+    def generate_mask(self, shape, device):
         # generates a mask for a partition (False indicates membership)
         if self._mask is not None: return self._mask
-        self._mask = torch.zeros(shape, dtype=torch.bool)
+        self._mask = torch.zeros(shape, dtype=torch.bool, device=device)
 
         # non-contiguous case
         if self.elements is not None:
@@ -52,8 +52,8 @@ class Mutant:
     def __init__(self, partitions: List[Partition], data: torch.Tensor, neutral, shape):
         
         # A bitmap in the shape of the input indicating membership to a partition in this mutant
-        mask = torch.zeros(shape, dtype=torch.bool)
-        for part in partitions: mask |= part.generate_mask(mask.shape)
+        mask = torch.zeros(shape, dtype=torch.bool, device=data.device)
+        for part in partitions: mask |= part.generate_mask(mask.shape, data.device)
 
         self.partitions = partitions
         self.data = torch.where(mask, data, neutral)
@@ -69,7 +69,7 @@ def _powerset(s):
 
 def _apply_responsibility(fi, part, responsibility):
     distributed = responsibility / len(part)
-    mask = part.generate_mask(fi.shape)
+    mask = part.generate_mask(fi.shape, fi.device)
 
     return torch.where(mask, distributed, fi)
 
@@ -203,15 +203,16 @@ class ReX(PerturbationAttribution):
 
         return _format_output(is_input_tuple, tuple(attributions))
 
-
+    @torch.no_grad()
     def _explain(self, input, baseline):
+        self._device = input.device
         self._shape = input.shape
         self._size = input.numel()
 
         prediction = self.forward_func(input)
 
-        prev_attribution = torch.full_like(input, 0.0, dtype=torch.float32)
-        attribution = torch.full_like(input, 1.0/input.numel(), dtype=torch.float32)
+        prev_attribution = torch.full_like(input, 0.0, dtype=torch.float32, device=self._device)
+        attribution = torch.full_like(input, 1.0/input.numel(), dtype=torch.float32, device=self._device)
 
         initial_partition = Partition(
             borders     = list((0, top) for top in self._shape),
@@ -232,7 +233,7 @@ class ReX(PerturbationAttribution):
                 consistent_mutants = [mut for mut in mutants if self.forward_func(mut.data) == prediction]
 
                 for part in partitions:
-                    resp        = _calculate_responsibility(part, mutants, consistent_mutants)
+                    resp = _calculate_responsibility(part, mutants, consistent_mutants)
 
                     if resp == 1 and len(part) > 1 and self._max_depth > depth:
                         Q.append((part, depth + 1))
@@ -248,11 +249,11 @@ class ReX(PerturbationAttribution):
 
     def _partition(self, part: Partition, responsibility: torch.Tensor) -> List[Partition]:
         # shuffle candidate indices (randomize tiebreakers)
-        perm = torch.randperm(len(part.elements))
+        perm = torch.randperm(len(part.elements), device=self._device)
         population = part.elements[perm]
         weights = responsibility[tuple(population.T)]
         
-        if torch.sum(weights, dim=None) == 0: weights = torch.ones_like(weights) / len(weights)
+        if torch.sum(weights, dim=None) == 0: weights = torch.ones_like(weights, device=self._device) / len(weights)
         target_weight = torch.sum(weights) / self._n_partitions
 
         # sort for greedy selection
