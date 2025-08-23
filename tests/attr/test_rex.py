@@ -77,7 +77,7 @@ class Test(BaseTest):
             if isinstance(input, tuple): inp_unwrapped = input[0]
 
             # Forward_func returns a constant, no responsibility in input   
-            self.assertFalse(torch.sum(attributions, dim=None))
+            self.assertEqual(torch.sum(attributions), 0)
             self.assertEqual(attributions.size(), inp_unwrapped.size())
 
 
@@ -95,7 +95,7 @@ class Test(BaseTest):
             self.assertTrue(attributions[idx] == 1)
 
             attributions[idx] = 0
-            self.assertFalse(torch.sum(attributions, dim=None))
+            self.assertEqual(torch.sum(attributions), 0)
 
 
     @parameterized.expand([
@@ -110,7 +110,7 @@ class Test(BaseTest):
 
         input = torch.ones(*input_shape)
         attributions = rex.attribute(input, 0, n_partitions=2, search_depth=10, n_searches=3, merge=False)[0]
-        self.assertTrue(attributions[idx])
+        self.assertGreater(attributions[idx], 0)
         attributions[idx] = 0
         self.assertLess(torch.sum(attributions, dim=None), 1)
 
@@ -126,12 +126,12 @@ class Test(BaseTest):
             
             attributions = rex.attribute(input, 0, *o, merge=False)[0]
 
-            self.assertTrue(attributions[lhs_idx] == 1.0, f"{attributions}")
-            self.assertTrue(attributions[rhs_idx] == 1.0, f"{attributions}")
+            self.assertEqual(attributions[lhs_idx], 1.0, f"{attributions}")
+            self.assertEqual(attributions[rhs_idx], 1.0, f"{attributions}")
 
             attributions[lhs_idx] = 0
             attributions[rhs_idx] = 0
-            self.assertTrue(torch.sum(attributions) < 1, f"{attributions}")
+            self.assertLess(torch.sum(attributions), 1, f"{attributions}")
 
 
     @parameterized.expand([
@@ -145,12 +145,12 @@ class Test(BaseTest):
             
             attributions = rex.attribute(input, 0, *o, merge=False)[0]
 
-            self.assertTrue(attributions[lhs_idx] == 0.5, f"{attributions}, {i}, {o}")
-            self.assertTrue(attributions[rhs_idx] == 0.5, f"{attributions}, {i}, {o}")
+            self.assertEqual(attributions[lhs_idx], 0.5, f"{attributions}, {i}, {o}")
+            self.assertEqual(attributions[rhs_idx], 0.5, f"{attributions}, {i}, {o}")
 
             attributions[lhs_idx] = 0
             attributions[rhs_idx] = 0
-            self.assertTrue(torch.sum(attributions) < 1, f"{attributions}")
+            self.assertLess(torch.sum(attributions), 1, f"{attributions}")
 
 
     @parameterized.expand([
@@ -189,9 +189,9 @@ class Test(BaseTest):
             attributions += eps
             attrib_norm = attributions / torch.sum(attributions)
 
-            # visualize_tensor(p)
-            # visualize_tensor(attrib_norm)
-            # visualize_tensor(p - attrib_norm)
+            visualize_tensor(p)
+            visualize_tensor(attrib_norm)
+            visualize_tensor(p - attrib_norm)
 
             mid = 0.5 * (p + attrib_norm)
             jsd = 0.5 * F.kl_div(p.log(), mid, reduction="sum")  \
