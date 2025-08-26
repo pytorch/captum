@@ -25,9 +25,9 @@ class Test(BaseTest):
     depth_opts = range(4, 10)
     n_partition_opts = range(4, 7)
     n_search_opts = range(10, 15)
-    is_contiguous_opts = [False, True]
+    assume_locality_opts = [True, False]
 
-    all_options = list(itertools.product(depth_opts, n_partition_opts, n_search_opts, is_contiguous_opts))
+    all_options = list(itertools.product(depth_opts, n_partition_opts, n_search_opts, assume_locality_opts))
 
     def _generate_gaussian_pdf(self, shape, mean):
         k = len(shape)
@@ -71,7 +71,7 @@ class Test(BaseTest):
         for o in self.all_options:
             rex = ReX(lambda x: True)
 
-            attributions = rex.attribute(input, baseline, *o, merge=False)[0]
+            attributions = rex.attribute(input, baseline, *o)[0]
 
             inp_unwrapped = input
             if isinstance(input, tuple): inp_unwrapped = input[0]
@@ -91,8 +91,8 @@ class Test(BaseTest):
         for o in self.all_options:
             rex = ReX(lambda x: x[idx])
 
-            attributions = rex.attribute(input, 0, *o, merge=False)[0]
-            self.assertTrue(attributions[idx] == 1)
+            attributions = rex.attribute(input, 0, *o)[0]
+            self.assertEqual(attributions[idx], 1, f"expected 1 at {idx} but found {attributions}")
 
             attributions[idx] = 0
             self.assertEqual(torch.sum(attributions), 0)
@@ -109,7 +109,7 @@ class Test(BaseTest):
         rex = ReX(lambda x: x[idx])
 
         input = torch.ones(*input_shape)
-        attributions = rex.attribute(input, 0, n_partitions=2, search_depth=10, n_searches=3, merge=False)[0]
+        attributions = rex.attribute(input, 0, n_partitions=2, search_depth=10, n_searches=3)[0]
         self.assertGreater(attributions[idx], 0)
         attributions[idx] = 0
         self.assertLess(torch.sum(attributions, dim=None), 1)
@@ -124,7 +124,7 @@ class Test(BaseTest):
             rex = ReX(lambda x: max(x[lhs_idx], x[rhs_idx]))
             input = torch.ones(input_shape)
             
-            attributions = rex.attribute(input, 0, *o, merge=False)[0]
+            attributions = rex.attribute(input, 0, *o)[0]
 
             self.assertEqual(attributions[lhs_idx], 1.0, f"{attributions}")
             self.assertEqual(attributions[rhs_idx], 1.0, f"{attributions}")
@@ -143,7 +143,7 @@ class Test(BaseTest):
             rex = ReX(lambda x: min(x[lhs_idx], x[rhs_idx]))
             input = torch.ones(input_shape)
             
-            attributions = rex.attribute(input, 0, *o, merge=False)[0]
+            attributions = rex.attribute(input, 0, *o)[0]
 
             self.assertEqual(attributions[lhs_idx], 0.5, f"{attributions}, {i}, {o}")
             self.assertEqual(attributions[rhs_idx], 0.5, f"{attributions}, {i}, {o}")
@@ -182,16 +182,15 @@ class Test(BaseTest):
                                          n_partitions=b,
                                          search_depth=10, 
                                          n_searches=25, 
-                                         contiguous_partitioning=True, 
-                                         merge=True)[0]
+                                         assume_locality=True)[0]
 
 
             attributions += eps
             attrib_norm = attributions / torch.sum(attributions)
 
-            visualize_tensor(p)
-            visualize_tensor(attrib_norm)
-            visualize_tensor(p - attrib_norm)
+            # visualize_tensor(p)
+            # visualize_tensor(attrib_norm)
+            # visualize_tensor(p - attrib_norm)
 
             mid = 0.5 * (p + attrib_norm)
             jsd = 0.5 * F.kl_div(p.log(), mid, reduction="sum")  \

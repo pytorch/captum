@@ -142,8 +142,7 @@ class ReX(PerturbationAttribution):
                   search_depth: int = 10,
                   n_partitions: int = 4,
                   n_searches: int = 5,
-                  contiguous_partitioning: bool = False,
-                  merge: bool = True) -> TensorOrTupleOfTensorsGeneric:
+                  assume_locality: bool = False) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Args:
             inputs:
@@ -167,14 +166,10 @@ class ReX(PerturbationAttribution):
             n_searches (optional):
                 The number of times the search is to be ran.
                 
-            contiguous_partitioning (optional):
-                If True, assumes locality of attribution and splits partitions contiguously along a dimension
-                (uselful for images). Otherwise, partitions are selected for element-wise using a greedy heuristic
-                approach.
-
-            merge (optional):
-                If True, return the average of all search results across all n_searches. Otherwise return the 
-                final search attribution without merging.
+            assume_locality (optional):
+                Where True, partitioning is contiguous, and attribution maps are merged after each serach. 
+                Otherwise, partitioning is initially random, then uses the previous attribution map 
+                as a heuristic for further searches, returning the result of the final search.
         """
 
         inputs, baselines = _format_input_baseline(inputs, baselines)
@@ -183,8 +178,7 @@ class ReX(PerturbationAttribution):
         self._n_partitions  = n_partitions
         self._max_depth     = search_depth
         self._n_searches    = n_searches
-        self._is_contiguous = contiguous_partitioning
-        self._merge         = merge
+        self._assume_locality = assume_locality
 
         is_input_tuple = isinstance(inputs, tuple)
         is_baseline_tuple = isinstance(baselines, tuple)
@@ -212,7 +206,7 @@ class ReX(PerturbationAttribution):
         prediction = self.forward_func(input)
 
         prev_attribution = torch.full_like(input, 0.0, dtype=torch.float32, device=self._device)
-        attribution = torch.full_like(input, 1.0/input.numel(), dtype=torch.float32, device=self._device)
+        attribution = torch.full_like(input, 1.0/self._size, dtype=torch.float32, device=self._device)
 
         initial_partition = Partition(
             borders     = list((0, top) for top in self._shape),
@@ -227,22 +221,23 @@ class ReX(PerturbationAttribution):
             while Q:
                 prev_part, depth = Q.popleft()
                 partitions = self._contiguous_partition(prev_part, depth) \
-                    if self._is_contiguous else self._partition(prev_part, attribution)
+                    if self._assume_locality else self._partition(prev_part, attribution)
 
                 mutants = [Mutant(part, input, baseline, self._shape) for part in _powerset(partitions)]
                 consistent_mutants = [mut for mut in mutants if self.forward_func(mut.data) == prediction]
 
                 for part in partitions:
                     resp = _calculate_responsibility(part, mutants, consistent_mutants)
-
+                    attribution = _apply_responsibility(attribution, part, resp)
+                    
                     if resp == 1 and len(part) > 1 and self._max_depth > depth:
                         Q.append((part, depth + 1))
-                    else:
-                        attribution = _apply_responsibility(attribution, part, resp)
-                
-            if self._merge: 
+
+            # take average of responsibility maps
+            if self._assume_locality: 
                 prev_attribution += (1/i) * (attribution - prev_attribution)
                 attribution = prev_attribution
+        
 
         return attribution.clone().detach()
 
