@@ -10,6 +10,7 @@ on:
 
 jobs:
   tests:
+    runs-on: self-hosted
     uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
     with:
       runner: linux.12xlarge
