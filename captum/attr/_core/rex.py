@@ -101,7 +101,7 @@ def _calculate_responsibility(subject_partition: Partition,
 
 def _generate_indices(ts):
     # return a tensor containing all indices in the input shape
-    return torch.tensor(tuple(itertools.product(*(range(s) for s in ts.shape))), dtype=torch.long)
+    return torch.tensor(tuple(itertools.product(*(range(s) for s in ts.shape))), dtype=torch.long, device=ts.device)
 
 
 class ReX(PerturbationAttribution):
@@ -109,14 +109,15 @@ class ReX(PerturbationAttribution):
     A perturbation-based approach to computing attribution, derived from the
     Halpern-Pearl definition of Actual Causality[1]. 
     
-    ReX works through a recursive search on the input to find areas that are 
+    ReX conducts a recursive search on the input to find areas that are 
     most responsible[3] for a models prediction. ReX splits an input into "partitions", 
     and masks combinations of these partitions with baseline (neutral) values
     to form "mutants". 
     
     Intuitively, where masking a partition never changes a models
     prediction, that partition is not responsible for the output. Conversely, where some 
-    combination of masked partitions changes the prediction, each partition has responsibility 1/(1+k), where
+    combination of masked partitions changes the prediction, each partition has some responsibility.
+    Specifically, their responsibility is 1/(1+k) where
     k is the minimal number of *other* masked partitions required to create a dependence on a partition.
 
     Responsible partitions are recursively searched to refine responsibility estimates, and results
@@ -125,7 +126,7 @@ class ReX(PerturbationAttribution):
 
     [1] - halpern 06
     [2] - rex paper
-    [3] - responsibility and blame
+    [3] - Responsibility and Blame; https://arxiv.org/pdf/cs/0312038
     """
     def __init__(self, forward_func):
         r"""

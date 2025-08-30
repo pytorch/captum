@@ -1,13 +1,13 @@
-from captum.attr._core.rex import *
+from captum.attr._core.rex import ReX
 
 from captum.testing.helpers.basic import BaseTest
 from parameterized import parameterized
 
+import math
 import random
 import statistics
 import torch
 import torch.nn.functional as F
-import numpy as np
 import matplotlib.pyplot as plt
 
 
@@ -112,7 +112,7 @@ class Test(BaseTest):
         attributions = rex.attribute(input, 0, n_partitions=2, search_depth=10, n_searches=3)[0]
         self.assertGreater(attributions[idx], 0)
         attributions[idx] = 0
-        self.assertLess(torch.sum(attributions, dim=None), 1)
+        self.assertLess(torch.sum(attributions), 1)
 
 
     @parameterized.expand([
