@@ -86,16 +86,16 @@
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>This tutorial demonstrates how to apply the <a href="https://arxiv.org/pdf/2002.08484.pdf">TracInCP</a> algorithm for influential examples interpretability from the Captum library.  TracInCP calculates the influence score of a given training example on a given test example, which roughly speaking, represents how much higher the loss for the given test example would be if the given training example were removed from the training dataset, and the model re-trained.  This functionality can be leveraged towards the following 2 use cases:</p>
+<p>This tutorial demonstrates how to apply the <a href="https://arxiv.org/pdf/2002.08484.pdf">TracInCP</a> algorithm for influential examples interpretability from the Captum library.  TracInCP calculates the influence score of a given training example on a given test example, which roughly speaking, represents how much higher the loss for the given test example would be if the given training example were removed from the training dataset, and the model re-trained.  This functionality can be leveraged towards the following two use cases:</p>
 <ol>
-<li>For a single test example, identifying its influential examples.  These are the training examples with the most positive influence scores (proponents) and the training examples with the most negative influence scores (opponents).  </li>
-<li>Identifying mis-labelled data, i.e. examples in the training data whose "ground-truth" label is actually incorrect.  The influence score of a mis-labelled example on itself (i.e. self influence score) will tend to be high.  Thus to find mis-labelled examples, one can examine examples in order of decreasing self influence score.</li>
+<li>For a single test example, identifying its influential examples.  These are the training examples with the most positive influence scores (proponents) and the training examples with the most negative influence scores (opponents).</li>
+<li>Identifying mislabelled data, i.e. examples in the training data whose "ground-truth" label is actually incorrect.  The influence score of a mislabelled example on itself (i.e. self-influence score) will tend to be high.  Thus to find mislabelled examples, one can examine examples in order of decreasing self-influence score.</li>
 </ol>
 <p>TracInCP can be used for any trained Pytorch model for which several model checkpoints are available.</p>
 <p><strong>Note:</strong> Before running this tutorial, please do the following:</p>
 <ul>
 <li>install Captum.</li>
-<li>install the torchvision, and matplotlib packages.</li>
+<li>install the torchvision and matplotlib packages.</li>
 <li>install the <a href="https://github.com/spotify/annoy">Annoy</a> Python module.</li>
 </ul>
 </div>
@@ -104,14 +104,14 @@
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Overview-of-different-implementations-of-the-TracInCP-method">Overview of different implementations of the TracInCP method<a class="anchor-link" href="#Overview-of-different-implementations-of-the-TracInCP-method">¶</a></h2><p>Currently, Captum offers 3 implementations, all of which implement the same API.  More specifically, they define an <code>influence</code> method, which can be used in 2 different modes:</p>
+<h2 id="Overview-of-different-implementations-of-the-TracInCP-method">Overview of different implementations of the TracInCP method<a class="anchor-link" href="#Overview-of-different-implementations-of-the-TracInCP-method">¶</a></h2><p>Currently, Captum offers 3 implementations, all of which implement the same API.  More specifically, they define an <code>influence</code> method, which can be used in two different modes:</p>
 <ul>
-<li>influence score mode: given a batch of test examples, calculates the influence score of every example in the training dataset on every test example.</li>
-<li>top-k most influential mode: given a batch of test examples, calculates either the proponents or opponents of every test example, as well as their corresponding influence scores.</li>
+<li>influence score mode: given a batch of test examples, calculate the influence score of every example in the training dataset on every test example.</li>
+<li>top-k most influential mode: given a batch of test examples, calculate either the proponents or opponents of every test example, as well as their corresponding influence scores.</li>
 </ul>
-<p>The 3 different implementations are defined in the following classes:</p>
+<p>The three different implementations are defined in the following classes:</p>
 <ul>
-<li><code>TracInCP</code>: considers gradients in all specified layers when computing influence scores.  Specifying many layers will slow the execution of all 3 modes.</li>
+<li><code>TracInCP</code>: considers gradients in all specified layers when computing influence scores.  Specifying many layers will slow the execution of all three modes.</li>
 <li><code>TracInCPFast</code>: In Appendix F of the TracIn paper, they show that if considering only gradients in the last fully-connected layer when computing influence scores, the computation can be done more quickly than naively applying backprop to compute gradients, using a computational trick.  <code>TracInCPFast</code> computes influence scores, considering only the last fully-connected layer, using that trick.  <code>TracInCPFast</code> is useful if you want to reduce the time and memory usage, relative to <code>TracInCP</code>.</li>
 <li><code>TracInCPFastRandProj</code>:  The previous two classes were not meant for "interactive" use, because each call to <code>influence</code> in influence score mode or top-k most influential mode takes time proportional to the training dataset size.  On the other hand, <code>TracInCPFastRandProj</code> enables "interactive" use, i.e. constant-time calls to <code>influence</code> for those two modes.  The price we pay is that in <code>TracInCPFastRandProj.__init__</code>, pre-processing is done to store embeddings related to each training example into a nearest-neighbors data structure.  This pre-processing takes both time and memory proportional to training dataset size.  Furthermore, random projections can be applied to reduce memory usage, at the cost of the influence scores used in those two modes to be only approximately correct.  Like <code>TracInCPFast</code>, this class only considers gradients in the last fully-connected layer, and is useful if you want to reduce the time and memory usage, relative to <code>TracInCP</code>.</li>
 </ul>
@@ -166,7 +166,7 @@
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h4 id="Define-net">Define <code>net</code><a class="anchor-link" href="#Define-net">¶</a></h4><p>We will use a relatively simple model from the following tutorial: <a href="https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html#sphx-glr-beginner-blitz-cifar10-tutorial-py">https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html#sphx-glr-beginner-blitz-cifar10-tutorial-py</a></p>
+<h4 id="Define-net">Define <code>net</code><a class="anchor-link" href="#Define-net">¶</a></h4><p>We will use a relatively simple model from the following tutorial: <a href="https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html#sphx-glr-beginner-blitz-cifar10-tutorial-py">https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html#sphx-glr-beginner-blitz-cifar10-tutorial-py</a>.</p>
 </div>
 </div>
 </div>
@@ -186,9 +186,9 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">Net</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv2</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pool1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">MaxPool2d</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pool2</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">MaxPool2d</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">conv2</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fc1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">16</span> <span class="o">*</span> <span class="mi">5</span> <span class="o">*</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">120</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fc2</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">120</span><span class="p">,</span> <span class="mi">84</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fc3</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">84</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
@@ -286,7 +286,7 @@
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h4 id="Define-test_dataset">Define <code>test_dataset</code><a class="anchor-link" href="#Define-test_dataset">¶</a></h4><p>This will be the same as <code>correct_dataset</code>, so that it shares the same path and transform.  The only difference is that that it uses the validation split</p>
+<h4 id="Define-test_dataset">Define <code>test_dataset</code><a class="anchor-link" href="#Define-test_dataset">¶</a></h4><p>This will be the same as <code>correct_dataset</code>, so that it shares the same path and transform.  The only difference is that it uses the validation split.</p>
 </div>
 </div>
 </div>
@@ -322,7 +322,7 @@
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>We first define a training function, which is copied from the above tutorial</p>
+<p>We first define a training function, which is copied from the above tutorial.</p>
 </div>
 </div>
 </div>
@@ -489,7 +489,7 @@ For this tutorial, we have saved the checkpoints from this training on AWS S3, a
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>We first load <code>net</code> with the last checkpoint so that the predictions we make in the next cell will be for the trained model.  We save this last checkpoint as <code>correct_dataset_final_checkpoint</code>, because it turns out we will re-use this checkpoint later on.</p>
+<p>We first load <code>net</code> with the last checkpoint so that the predictions we make in the next cell will be for the trained model.  We save this last checkpoint as <code>correct_dataset_final_checkpoint</code>, because we will re-use this checkpoint later on.</p>
 </div>
 </div>
 </div>
@@ -1244,8 +1244,8 @@ predicted_prob tensor(0.6398, grad_fn=&lt;UnbindBackward0&gt;)
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Identifying-mislabelled-data">Identifying mislabelled data<a class="anchor-link" href="#Identifying-mislabelled-data">¶</a></h1><p>Now, we will illustrate the ability of TracInCP to identify mislabelled data.  As before, we need 3 components:</p>
 <ul>
-<li>a Pytorch model.  We will continue to use <code>net</code></li>
-<li>a Pytorch <code>Dataset</code> used to train <code>net</code>, <code>mislabelled_dataset</code>.</li>
+<li>A Pytorch model.  We will continue to use <code>net</code>.</li>
+<li>A Pytorch <code>Dataset</code> used to train <code>net</code>, <code>mislabelled_dataset</code>.</li>
 <li>A Pytorch <code>Dataset</code>, <code>test_dataset</code>.  For this, we will use the original CIFAR-10 validation split.  Unlike when using TracInCP to identify influential examples for certain test examples, we only use this for monitoring training; we are just identifying mislabelled examples in the training data.  Also note that unlike <code>mislabelled_dataset</code>, <code>test_dataset</code> will not have mislabelled examples.</li>
 <li>checkpoints from training <code>net</code> with <code>mislabelled_dataset</code></li>
 </ul>
@@ -1273,7 +1273,7 @@ predicted_prob tensor(0.6398, grad_fn=&lt;UnbindBackward0&gt;)
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h4 id="Define-mislabelled_dataset">Define <code>mislabelled_dataset</code><a class="anchor-link" href="#Define-mislabelled_dataset">¶</a></h4><p>We now define <code>mislabelled_dataset</code> by artificially introducing mis-labelled examples into <code>correct_dataset</code>.  Using artificial data lets us know the ground-truth for whether examples really are mis-labelled, and thus do evaluation. We create <code>mislabelled_dataset</code> from <code>correct_dataset</code> using the following procedure: We initialize the Pytorch model, trained using <code>correct_dataset</code>, as <code>correct_dataset_net</code>.  For 10% of the examples in <code>correct_dataset</code>, we use <code>correct_dataset_net</code> to predict the probability the example belongs to each class.  We then change the label to the most probable label that is <em>incorrect</em>.</p>
+<h4 id="Define-mislabelled_dataset">Define <code>mislabelled_dataset</code><a class="anchor-link" href="#Define-mislabelled_dataset">¶</a></h4><p>We now define <code>mislabelled_dataset</code> by artificially introducing mislabelled examples into <code>correct_dataset</code>.  Using artificial data lets us know the ground-truth for whether examples really are mis-labelled, and thus do evaluation. We create <code>mislabelled_dataset</code> from <code>correct_dataset</code> using the following procedure: We initialize the Pytorch model, trained using <code>correct_dataset</code>, as <code>correct_dataset_net</code>.  For 10% of the examples in <code>correct_dataset</code>, we use <code>correct_dataset_net</code> to predict the probability the example belongs to each class.  We then change the label to the most probable label that is <em>incorrect</em>.</p>
 <p>Note that to know the ground truth for which examples in <code>mislabelled_dataset</code> are mislabelled, we can compare the labels between <code>mislabelled_dataset</code> and <code>correct_dataset</code>.  Also note that since both datasets have the same features, <code>mislabelled_dataset</code> is defined in terms of <code>correct_dataset</code>.</p>
 </div>
 </div>

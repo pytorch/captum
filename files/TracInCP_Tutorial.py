@@ -3,9 +3,9 @@
 
 # # Tutorial for TracInCP method
 
-# This tutorial demonstrates how to apply the [TracInCP](https://arxiv.org/pdf/2002.08484.pdf) algorithm for influential examples interpretability from the Captum library.  TracInCP calculates the influence score of a given training example on a given test example, which roughly speaking, represents how much higher the loss for the given test example would be if the given training example were removed from the training dataset, and the model re-trained.  This functionality can be leveraged towards the following 2 use cases:
-# 1. For a single test example, identifying its influential examples.  These are the training examples with the most positive influence scores (proponents) and the training examples with the most negative influence scores (opponents).  
-# 2. Identifying mis-labelled data, i.e. examples in the training data whose "ground-truth" label is actually incorrect.  The influence score of a mis-labelled example on itself (i.e. self influence score) will tend to be high.  Thus to find mis-labelled examples, one can examine examples in order of decreasing self influence score.
+# This tutorial demonstrates how to apply the [TracInCP](https://arxiv.org/pdf/2002.08484.pdf) algorithm for influential examples interpretability from the Captum library.  TracInCP calculates the influence score of a given training example on a given test example, which roughly speaking, represents how much higher the loss for the given test example would be if the given training example were removed from the training dataset, and the model re-trained.  This functionality can be leveraged towards the following two use cases:
+# 1. For a single test example, identifying its influential examples.  These are the training examples with the most positive influence scores (proponents) and the training examples with the most negative influence scores (opponents).
+# 2. Identifying mislabelled data, i.e. examples in the training data whose "ground-truth" label is actually incorrect.  The influence score of a mislabelled example on itself (i.e. self-influence score) will tend to be high.  Thus to find mislabelled examples, one can examine examples in order of decreasing self-influence score.
 # 
 # 
 # TracInCP can be used for any trained Pytorch model for which several model checkpoints are available.
@@ -13,16 +13,16 @@
 #   
 #   **Note:** Before running this tutorial, please do the following:
 #   - install Captum.
-#   - install the torchvision, and matplotlib packages.
+#   - install the torchvision and matplotlib packages.
 #   - install the [Annoy](https://github.com/spotify/annoy) Python module.
 
 # ## Overview of different implementations of the TracInCP method
-# Currently, Captum offers 3 implementations, all of which implement the same API.  More specifically, they define an `influence` method, which can be used in 2 different modes:
-# - influence score mode: given a batch of test examples, calculates the influence score of every example in the training dataset on every test example.
-# - top-k most influential mode: given a batch of test examples, calculates either the proponents or opponents of every test example, as well as their corresponding influence scores.
+# Currently, Captum offers 3 implementations, all of which implement the same API.  More specifically, they define an `influence` method, which can be used in two different modes:
+# - influence score mode: given a batch of test examples, calculate the influence score of every example in the training dataset on every test example.
+# - top-k most influential mode: given a batch of test examples, calculate either the proponents or opponents of every test example, as well as their corresponding influence scores.
 # 
-# The 3 different implementations are defined in the following classes:
-# - `TracInCP`: considers gradients in all specified layers when computing influence scores.  Specifying many layers will slow the execution of all 3 modes.
+# The three different implementations are defined in the following classes:
+# - `TracInCP`: considers gradients in all specified layers when computing influence scores.  Specifying many layers will slow the execution of all three modes.
 # - `TracInCPFast`: In Appendix F of the TracIn paper, they show that if considering only gradients in the last fully-connected layer when computing influence scores, the computation can be done more quickly than naively applying backprop to compute gradients, using a computational trick.  `TracInCPFast` computes influence scores, considering only the last fully-connected layer, using that trick.  `TracInCPFast` is useful if you want to reduce the time and memory usage, relative to `TracInCP`.
 # - `TracInCPFastRandProj`:  The previous two classes were not meant for "interactive" use, because each call to `influence` in influence score mode or top-k most influential mode takes time proportional to the training dataset size.  On the other hand, `TracInCPFastRandProj` enables "interactive" use, i.e. constant-time calls to `influence` for those two modes.  The price we pay is that in `TracInCPFastRandProj.__init__`, pre-processing is done to store embeddings related to each training example into a nearest-neighbors data structure.  This pre-processing takes both time and memory proportional to training dataset size.  Furthermore, random projections can be applied to reduce memory usage, at the cost of the influence scores used in those two modes to be only approximately correct.  Like `TracInCPFast`, this class only considers gradients in the last fully-connected layer, and is useful if you want to reduce the time and memory usage, relative to `TracInCP`.
 
@@ -60,7 +60,7 @@ warnings.filterwarnings("ignore")
 # - Checkpoints from training `net` with `correct_dataset`.  We will train and save checkpoints.
 
 # #### Define `net`
-# We will use a relatively simple model from the following tutorial: https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html#sphx-glr-beginner-blitz-cifar10-tutorial-py
+# We will use a relatively simple model from the following tutorial: https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html#sphx-glr-beginner-blitz-cifar10-tutorial-py.
 
 # We first define the architecture of `net`
 
@@ -71,9 +71,9 @@ class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
         self.conv1 = nn.Conv2d(3, 6, 5)
+        self.conv2 = nn.Conv2d(6, 16, 5)
         self.pool1 = nn.MaxPool2d(2, 2)
         self.pool2 = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(6, 16, 5)
         self.fc1 = nn.Linear(16 * 5 * 5, 120)
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, 10)
@@ -121,7 +121,7 @@ correct_dataset_path = "data/cifar_10"
 correct_dataset = torchvision.datasets.CIFAR10(root=correct_dataset_path, train=True, download=True, transform=normalize)
 
 # #### Define `test_dataset`
-# This will be the same as `correct_dataset`, so that it shares the same path and transform.  The only difference is that that it uses the validation split
+# This will be the same as `correct_dataset`, so that it shares the same path and transform.  The only difference is that it uses the validation split.
 
 # In[6]:
 
@@ -132,7 +132,7 @@ test_dataset = torchvision.datasets.CIFAR10(root=correct_dataset_path, train=Fal
 # We will obtain checkpoints by training `net` for 26 epochs on `correct_dataset`.  In general, there should be at least 5 checkpoints, and they can be evenly spaced throughout training, or better yet, be for epochs where the loss decreased a lot.
 # 
 
-# We first define a training function, which is copied from the above tutorial
+# We first define a training function, which is copied from the above tutorial.
 
 # In[7]:
 
@@ -244,7 +244,7 @@ def checkpoints_load_func(net, path):
     net.load_state_dict(weights["model_state_dict"])
     return 1.
 
-# We first load `net` with the last checkpoint so that the predictions we make in the next cell will be for the trained model.  We save this last checkpoint as `correct_dataset_final_checkpoint`, because it turns out we will re-use this checkpoint later on.
+# We first load `net` with the last checkpoint so that the predictions we make in the next cell will be for the trained model.  We save this last checkpoint as `correct_dataset_final_checkpoint`, because we will re-use this checkpoint later on.
 
 # In[12]:
 
@@ -472,8 +472,8 @@ display_proponents_and_opponents(
 
 # # Identifying mislabelled data
 # Now, we will illustrate the ability of TracInCP to identify mislabelled data.  As before, we need 3 components:
-# - a Pytorch model.  We will continue to use `net`
-# - a Pytorch `Dataset` used to train `net`, `mislabelled_dataset`.
+# - A Pytorch model.  We will continue to use `net`.
+# - A Pytorch `Dataset` used to train `net`, `mislabelled_dataset`.
 # - A Pytorch `Dataset`, `test_dataset`.  For this, we will use the original CIFAR-10 validation split.  Unlike when using TracInCP to identify influential examples for certain test examples, we only use this for monitoring training; we are just identifying mislabelled examples in the training data.  Also note that unlike `mislabelled_dataset`, `test_dataset` will not have mislabelled examples.
 # - checkpoints from training `net` with `mislabelled_dataset`
 
@@ -487,7 +487,7 @@ net = Net()
 
 # #### Define `mislabelled_dataset`
 # 
-# We now define `mislabelled_dataset` by artificially introducing mis-labelled examples into `correct_dataset`.  Using artificial data lets us know the ground-truth for whether examples really are mis-labelled, and thus do evaluation. We create `mislabelled_dataset` from `correct_dataset` using the following procedure: We initialize the Pytorch model, trained using `correct_dataset`, as `correct_dataset_net`.  For 10% of the examples in `correct_dataset`, we use `correct_dataset_net` to predict the probability the example belongs to each class.  We then change the label to the most probable label that is *incorrect*.
+# We now define `mislabelled_dataset` by artificially introducing mislabelled examples into `correct_dataset`.  Using artificial data lets us know the ground-truth for whether examples really are mis-labelled, and thus do evaluation. We create `mislabelled_dataset` from `correct_dataset` using the following procedure: We initialize the Pytorch model, trained using `correct_dataset`, as `correct_dataset_net`.  For 10% of the examples in `correct_dataset`, we use `correct_dataset_net` to predict the probability the example belongs to each class.  We then change the label to the most probable label that is *incorrect*.
 # 
 # Note that to know the ground truth for which examples in `mislabelled_dataset` are mislabelled, we can compare the labels between `mislabelled_dataset` and `correct_dataset`.  Also note that since both datasets have the same features, `mislabelled_dataset` is defined in terms of `correct_dataset`.
 
