@@ -13,7 +13,6 @@ env:
 
 jobs:
   tests:
-    runs-on: ubuntu-latest
     strategy:
       matrix:
         python_version: ["3.9", "3.10", "3.11", "3.12"]

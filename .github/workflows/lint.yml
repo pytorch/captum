@@ -3,19 +3,21 @@ name: Captum Lint
 on:
   pull_request:
   push:
-    branches: [ master ]
+    branches:
+      - master
+
   workflow_dispatch:
 
 jobs:
   tests:
-    # Make sure your runner has these labels (or just "self-hosted")
-    runs-on: self-hosted
-    steps:
-      - uses: actions/checkout@v4
-      - name: Lint & docs
-        run: |
-          sudo chmod -R 777 .
-          ./scripts/install_via_pip.sh
-          ufmt check .
-          flake8
-          sphinx-build -WT --keep-going sphinx/source sphinx/build
+    uses: pytorch/test-infra/.github/workflows/linux_job.yml@main
+    with:
+      runner: linux.12xlarge
+      docker-image: cimg/python:3.11
+      repository: pytorch/captum
+      script: |
+        sudo chmod -R 777 .
+        ./scripts/install_via_pip.sh
+        ufmt check .
+        flake8
+        sphinx-build -WT --keep-going sphinx/source sphinx/build

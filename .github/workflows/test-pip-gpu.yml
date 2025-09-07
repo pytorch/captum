@@ -10,7 +10,6 @@ on:
 
 jobs:
   tests:
-    runs-on: ubuntu-latest
     strategy:
       matrix:
         cuda_arch_version: ["12.1"]
