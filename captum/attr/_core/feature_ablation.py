@@ -704,9 +704,11 @@ class FeatureAblation(PerturbationAttribution):
                 tensor_mask.append(mask)
 
                 assert baseline is not None, "baseline must be provided"
-                ablated_input[start_idx:end_idx] = input_tensor[start_idx:end_idx] * (
-                    1 - mask
+                ablated_feature = input_tensor[start_idx:end_idx] * (1 - mask).to(
+                    input_tensor.dtype
                 ) + (baseline * mask.to(input_tensor.dtype))
+                ablated_input = ablated_input.to(ablated_feature.dtype)
+                ablated_input[start_idx:end_idx] = ablated_feature
             current_masks.append(torch.stack(tensor_mask, dim=0))
             ablated_inputs.append(ablated_input)
 
