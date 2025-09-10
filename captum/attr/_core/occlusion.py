@@ -267,7 +267,6 @@ class Occlusion(FeatureAblation):
             shift_counts=tuple(shift_counts),
             strides=strides,
             show_progress=show_progress,
-            enable_cross_tensor_attribution=True,
         )
 
     def attribute_future(self) -> None:
