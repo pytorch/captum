@@ -115,7 +115,7 @@ class FeaturePermutation(FeatureAblation):
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         perturbations_per_eval: int = 1,
         show_progress: bool = False,
-        enable_cross_tensor_attribution: bool = False,
+        enable_cross_tensor_attribution: bool = True,
         **kwargs: Any,
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
@@ -304,7 +304,7 @@ class FeaturePermutation(FeatureAblation):
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
         perturbations_per_eval: int = 1,
         show_progress: bool = False,
-        enable_cross_tensor_attribution: bool = False,
+        enable_cross_tensor_attribution: bool = True,
         **kwargs: Any,
     ) -> Future[TensorOrTupleOfTensorsGeneric]:
         """
