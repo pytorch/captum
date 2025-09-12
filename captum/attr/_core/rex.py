@@ -6,7 +6,7 @@ import math
 import random
 from collections import deque
 from dataclasses import dataclass
-from typing import Tuple, cast, List, Sized
+from typing import cast, List, Sized, Tuple
 
 import torch
 from captum._utils.typing import BaselineType, TensorOrTupleOfTensorsGeneric
@@ -145,16 +145,16 @@ class ReX(PerturbationAttribution):
     and results are (optionally) merged to produce the final attribution map.
 
 
-    [1] - halpern 06
-    [2] - rex paper
+    [1] - Cause: https://www.cs.cornell.edu/home/halpern/papers/modified-HPdef.pdf
+    [2] - ReX paper: https://arxiv.org/pdf/2411.08875
     [3] - Responsibility and Blame; https://arxiv.org/pdf/cs/0312038
     """
 
     def __init__(self, forward_func):
         r"""
         Args:
-            forward_func (Callable): The function to be explained. Must return
-            a scalar for which the equality operator is defined.
+            forward_func (Callable): The function to be explained. *Must* return
+                a scalar for which the equality operator is defined.
         """
         PerturbationAttribution.__init__(self, forward_func)
 
@@ -170,35 +170,32 @@ class ReX(PerturbationAttribution):
     ) -> TensorOrTupleOfTensorsGeneric:
         r"""
         Args:
-            inputs:
-                An input or tuple of inputs to be explain. Each input
-                must be of the shape expected by the forward_func. Where multiple
-                examples are provided, they must be listed in a tuple.
+            inputs (Tensor or tuple[Tensor, ...]): An input or tuple of inputs
+                to be explained. Each input must be of the shape expected by
+                the forward_func. Where multiple examples are provided, they
+                must be listed in a tuple.
 
-            baselines:
-                A neutral values to be used as occlusion values. Where a scalar or
-                tensor is provided, they are broadcast to the input shape. Where
-                tuples are provided, they are paired element-wise, and must match
-                the structure of the input.
+            baselines (Tensor or tuple[Tensor, ...]): A neutral values to be used
+                as occlusion values. Where a scalar or tensor is provided, they
+                are broadcast to the input shape. Where tuples are provided,
+                they are paired element-wise, and must match the structure of
+                the input.
 
-            search_depth (optional):
-                The maximum depth to which ReX will refine responsibility estimates
-                for causes.
+            search_depth (int, optional): The maximum depth to which ReX will refine
+                responsibility estimates for causes.
 
-            n_partitions (optional):
-                The maximum number of partitions to be made out of the input at each
-                search step. At least 1, and no larger than the partition size. Where
-                ``contiguous partitioning`` is set to False, partitions are created
-                using previous attribution maps as heuristics.
+            n_partitions (optional): The maximum number of partitions to be made out of
+                the input at each search step. At least 1, and no larger than the
+                partition size. Where ``contiguous partitioning`` is set to False,
+                partitions are created using previous attribution maps as heuristics.
 
-            n_searches (optional):
-                The number of times the search is to be ran.
+            n_searches (int, optional): The number of times the search is to be ran.
 
-            assume_locality (optional):
-                Where True, partitioning is contiguous and attribution maps are merged
-                after each search. Otherwise, partitioning is initially random, then
-                uses the previous attribution map as a heuristic for further searches,
-                returning the result of the final search.
+            assume_locality (int, optional): Where True, partitioning is contiguous and
+                attribution maps are merged after each search. Otherwise,
+                partitioning is initially random, then uses the previous attribution
+                map as a heuristic for further searches, returning the result of the
+                final search.
         """
 
         inputs, baselines = _format_input_baseline(inputs, baselines)
