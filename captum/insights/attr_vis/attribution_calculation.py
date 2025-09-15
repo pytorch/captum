@@ -26,11 +26,8 @@ from captum.insights.attr_vis.features import BaseFeature
 from torch import Tensor
 from torch.nn import Module
 
-# pyre-fixme[4]: Attribute annotation cannot be `Any`.
-# pyre-fixme[2]: Parameter annotation cannot be `Any`.
 OutputScore = namedtuple("OutputScore", "score index label")
 
-# pyre-fixme[33]: TypeAlias cannot alias to a type containing `Any`.
 _IntrospectableCallable = Callable[..., Any]
 
 

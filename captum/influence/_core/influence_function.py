@@ -263,7 +263,6 @@ class InfluenceFunctionBase(DataInfluence):
     @abstractmethod
     def self_influence(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs_dataset: Optional[Union[Tuple[Any, ...], DataLoader]] = None,
         show_progress: bool = False,
     ) -> Tensor:
@@ -315,7 +314,6 @@ class InfluenceFunctionBase(DataInfluence):
     @abstractmethod
     def _get_k_most_influential(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         k: int = 5,
         proponents: bool = True,
@@ -367,7 +365,6 @@ class InfluenceFunctionBase(DataInfluence):
     @abstractmethod
     def _influence(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         show_progress: bool = False,
     ) -> Tensor:
@@ -486,7 +483,6 @@ class IntermediateQuantitiesInfluenceFunction(InfluenceFunctionBase):
     # pyre-fixme[3]: Return type must be annotated.
     def compute_intermediate_quantities(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs_dataset: Union[Tuple[Any, ...], DataLoader],
         aggregate: bool = False,
         show_progress: bool = False,
@@ -961,7 +957,6 @@ class NaiveInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
 
     def compute_intermediate_quantities(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs_dataset: Union[Tuple[Any, ...], DataLoader],
         aggregate: bool = False,
         show_progress: bool = False,
@@ -1172,7 +1167,6 @@ class NaiveInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
 
     def _get_k_most_influential(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         k: int = 5,
         proponents: bool = True,
@@ -1246,7 +1240,6 @@ class NaiveInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
 
     def _influence(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs: Union[Tuple[Any, ...], DataLoader],
         show_progress: bool = False,
     ) -> Tensor:
@@ -1287,7 +1280,6 @@ class NaiveInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
     @log_usage(part_of_slo=True, skip_self_logging=True)
     def self_influence(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         inputs_dataset: Optional[Union[Tuple[Any, ...], DataLoader]] = None,
         show_progress: bool = False,
     ) -> Tensor:
@@ -1333,7 +1325,6 @@ class NaiveInfluenceFunction(IntermediateQuantitiesInfluenceFunction):
 
 def _basic_computation_naive_influence_function(
     influence_inst: InfluenceFunctionBase,
-    # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
     inputs: Tuple[Any, ...],
     targets: Optional[Tensor] = None,
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.

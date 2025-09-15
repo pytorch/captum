@@ -30,7 +30,6 @@ def _get_simple_model(inplace: bool = False) -> Tuple[SimpleLRPModel, Tensor]:
     return model, inputs
 
 
-# pyre-fixme[3]: Return type must be specified as type that does not contain `Any`.
 def _get_simple_model2(inplace: bool = False) -> Tuple[Any, Tensor]:
     class MyModel(nn.Module):
         def __init__(self, inplace) -> None:

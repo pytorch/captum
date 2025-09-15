@@ -220,6 +220,42 @@ class Test(BaseTest):
             perturbations_per_eval=(1, 2, 3),
         )
 
+    def test_multi_input_ablation_with_int_input_tensor_and_float_baseline(
+        self,
+    ) -> None:
+        def sum_forward(*inps: torch.Tensor) -> torch.Tensor:
+            flattened = [torch.flatten(inp, start_dim=1) for inp in inps]
+            return torch.cat(flattened, dim=1).sum(1)
+
+        ablation_algo = FeatureAblation(sum_forward)
+        inp1 = torch.tensor([[0, 1], [3, 4]])
+        inp2 = torch.tensor(
+            [
+                [[0.1, 0.2], [0.3, 0.2]],
+                [[0.4, 0.5], [0.3, 0.2]],
+            ]
+        )
+        inp3 = torch.tensor([[0], [1]])
+
+        expected = (
+            torch.tensor([[-0.2, 0.8], [2.8, 3.8]]),
+            torch.tensor(
+                [
+                    [[-3.0, -2.9], [-2.8, -2.9]],
+                    [[-2.7, -2.6], [-2.8, -2.9]],
+                ]
+            ),
+            torch.tensor([[-0.4], [0.6]]),
+        )
+        self._ablation_test_assert(
+            ablation_algo,
+            (inp1, inp2, inp3),
+            expected,
+            target=None,
+            baselines=(0.2, 3.1, 0.4),
+            test_enable_cross_tensor_attribution=[False, True],
+        )
+
     def test_multi_input_ablation_with_mask_weighted(self) -> None:
         ablation_algo = FeatureAblation(BasicModel_MultiLayer_MultiInput())
         ablation_algo.use_weights = True
@@ -571,8 +607,6 @@ class Test(BaseTest):
             target=None,
             feature_mask=mask,
             perturbations_per_eval=(1,),
-            # pyre-fixme[58]: `+` is not supported for operand types `Tuple[int]`
-            #  and `Size`.
             expected_ablation=torch.zeros((5 * 3 * 2,) + inp[0].shape),
             test_future=True,
         )
@@ -659,8 +693,6 @@ class Test(BaseTest):
             target=None,
             feature_mask=mask,
             perturbations_per_eval=(1,),
-            # pyre-fixme[58]: `+` is not supported for operand types `Tuple[int]`
-            #  and `Size`.
             expected_ablation=torch.zeros((5 * 3 * 2,) + inp[0].shape),
         )
 
@@ -833,8 +865,6 @@ class Test(BaseTest):
         self,
         ablation_algo: Attribution,
         test_input: TensorOrTupleOfTensorsGeneric,
-        # pyre-fixme[2]: Parameter `expected_ablation` must have a type that does not
-        # contain `Any`.
         expected_ablation: Union[
             Tensor,
             Tuple[Tensor, ...],
@@ -848,8 +878,6 @@ class Test(BaseTest):
             Tuple[List[Any], ...],
         ],
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
-        # pyre-fixme[2]: Parameter `additional_input` has type `None` but type `Any`
-        # is specified.
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
         baselines: BaselineType = None,

@@ -120,14 +120,14 @@ class Test(BaseTest):
         inp = torch.tensor([[1.0, 2.0]])
         assertTensorAlmostEqual(
             self,
-            feature_importance.attribute(inp),
+            feature_importance.attribute(inp, enable_cross_tensor_attribution=False),
             torch.tensor([[0.0, 0.0]]),
             delta=0.0,
         )
 
         feature_importance._min_examples_per_batch = 1
         with self.assertRaises(AssertionError):
-            feature_importance.attribute(inp)
+            feature_importance.attribute(inp, enable_cross_tensor_attribution=False)
 
     def test_simple_input_with_min_examples_in_group(self) -> None:
         def forward_func(x: Tensor) -> Tensor:

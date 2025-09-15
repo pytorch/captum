@@ -112,7 +112,7 @@ class Test(BaseTest):
         saliency = Saliency(model)
         attributions = None
         with self.assertRaises(NotImplementedError):
-            attributions = saliency.attribute_future()
+            attributions = saliency.attribute_future()  # type: ignore
         self.assertEqual(attributions, None)
 
     def _saliency_base_assert(

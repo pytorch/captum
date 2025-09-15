@@ -46,11 +46,9 @@ SUPPORTED_ATTRIBUTION_METHODS = [
 ]
 
 
-# pyre-fixme[2]: Parameter annotation cannot contain `Any`.
 class ConfigParameters(NamedTuple):
     params: Dict[str, Config]
     help_info: Optional[str] = None  # TODO fill out help for each method
-    # pyre-fixme[4]: Attribute annotation cannot contain `Any`.
     post_process: Optional[Dict[str, Callable[[Any], Any]]] = None
 
 

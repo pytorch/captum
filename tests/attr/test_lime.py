@@ -482,7 +482,7 @@ class Test(BaseTest):
         )
         attributions = None
         with self.assertRaises(NotImplementedError):
-            attributions = lime.attribute_future()
+            attributions = lime.attribute_future()  # type: ignore
         self.assertEqual(attributions, None)
 
     # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
@@ -519,12 +519,9 @@ class Test(BaseTest):
         # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
         model: Callable,
         test_input: TensorOrTupleOfTensorsGeneric,
-        # pyre-fixme[2]: Parameter `expected_attr` must have a type other than `Any`.
         expected_attr: Any,
         expected_coefs_only: Union[None, List[List[Union[int, float]]], Tensor] = None,
         feature_mask: Union[None, TensorOrTupleOfTensorsGeneric] = None,
-        # pyre-fixme[2]: Parameter `additional_input` has type `None`
-        # but type `Any` is specified.
         additional_input: Any = None,
         perturbations_per_eval: Tuple[int, ...] = (1,),
         baselines: BaselineType = None,

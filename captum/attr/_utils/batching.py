@@ -136,7 +136,6 @@ def _tuple_splice_range(
     )
 
 
-# pyre-fixme[3]: Return annotation cannot contain `Any`.
 def _batched_generator(
     inputs: TensorOrTupleOfTensorsGeneric,
     additional_forward_args: Optional[object] = None,
@@ -221,8 +220,6 @@ def _batched_operator(
     return _reduce_list(all_outputs)
 
 
-# pyre-fixme[3]: Return annotation cannot be `Any`.
-# pyre-fixme[2]: Parameter annotation cannot be `Any`.
 def _select_example(curr_arg: Any, index: int, bsz: int) -> Any:
     if curr_arg is None:
         return None
