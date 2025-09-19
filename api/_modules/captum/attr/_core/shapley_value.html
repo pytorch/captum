@@ -47,6 +47,7 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">List</span><span class="p">,</span>
     <span class="n">Optional</span><span class="p">,</span>
     <span class="n">Sequence</span><span class="p">,</span>
+    <span class="n">Set</span><span class="p">,</span>
     <span class="n">Tuple</span><span class="p">,</span>
     <span class="n">Union</span><span class="p">,</span>
 <span class="p">)</span>
@@ -418,6 +419,7 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="n">current_add_args</span><span class="p">,</span>
                     <span class="n">current_target</span><span class="p">,</span>
                     <span class="n">current_masks</span><span class="p">,</span>
+                    <span class="n">current_feat_list</span><span class="p">,</span>
                 <span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_perturbation_generator</span><span class="p">(</span>
                     <span class="n">inputs_tuple</span><span class="p">,</span>
                     <span class="n">additional_forward_args</span><span class="p">,</span>
@@ -459,8 +461,7 @@ src="/_sphinx/documentation_options.js"></script>
                             <span class="n">all_eval</span><span class="p">[</span><span class="n">num_examples</span><span class="p">:]</span> <span class="o">-</span> <span class="n">all_eval</span><span class="p">[:</span><span class="o">-</span><span class="n">num_examples</span><span class="p">]</span>
                         <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">inputs_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
                         <span class="n">prev_results</span> <span class="o">=</span> <span class="n">all_eval</span><span class="p">[</span><span class="o">-</span><span class="n">num_examples</span><span class="p">:]</span>
-
-                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">total_attrib</span><span class="p">)):</span>
+                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">current_feat_list</span><span class="p">:</span>
                         <span class="c1"># format eval_diff to shape</span>
                         <span class="c1"># (n_perturb, *output_shape, 1,.. 1)</span>
                         <span class="c1"># where n_perturb may not be perturb_per_eval</span>
@@ -584,6 +585,7 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="n">current_add_args</span><span class="p">,</span>
                     <span class="n">current_target</span><span class="p">,</span>
                     <span class="n">current_masks</span><span class="p">,</span>
+                    <span class="n">_</span><span class="p">,</span>
                 <span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_perturbation_generator</span><span class="p">(</span>
                     <span class="n">inputs_tuple</span><span class="p">,</span>
                     <span class="n">additional_forward_args</span><span class="p">,</span>
@@ -867,7 +869,9 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">input_masks</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
         <span class="n">feature_permutation</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="n">perturbations_per_eval</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">object</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span>
+        <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">object</span><span class="p">,</span> <span class="n">TargetType</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Set</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span>
+    <span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        This method is a generator which yields each perturbation to be evaluated</span>
 <span class="sd">        including inputs, additional_forward_args, targets, and mask.</span>
@@ -877,6 +881,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">current_tensors</span> <span class="o">=</span> <span class="n">baselines</span>
         <span class="n">current_tensors_list</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">current_mask_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">current_feat_list</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
         <span class="c1"># Compute repeated additional args and targets</span>
         <span class="n">additional_args_repeated</span> <span class="o">=</span> <span class="p">(</span>
@@ -909,6 +914,7 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="n">device</span><span class="o">=</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
+            <span class="n">current_feat_list</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">feat_tensor_index_map</span><span class="p">[</span><span class="n">feature_permutation</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
 
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">current_tensors_list</span><span class="p">)</span> <span class="o">==</span> <span class="n">perturbations_per_eval</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">current_tensors_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -928,9 +934,11 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="n">additional_args_repeated</span><span class="p">,</span>
                     <span class="n">target_repeated</span><span class="p">,</span>
                     <span class="n">combined_masks</span><span class="p">,</span>
+                    <span class="n">current_feat_list</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">current_tensors_list</span> <span class="o">=</span> <span class="p">[]</span>
                 <span class="n">current_mask_list</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">current_feat_list</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
         <span class="c1"># Create batch with remaining evaluations, may not be a complete batch</span>
         <span class="c1"># (= perturbations_per_eval)</span>
@@ -956,6 +964,7 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">additional_args_repeated</span><span class="p">,</span>
                 <span class="n">target_repeated</span><span class="p">,</span>
                 <span class="n">combined_masks</span><span class="p">,</span>
+                <span class="n">current_feat_list</span><span class="p">,</span>
             <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_get_n_evaluations</span><span class="p">(</span>
