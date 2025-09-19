@@ -15,6 +15,7 @@ from typing import (
     List,
     Optional,
     Sequence,
+    Set,
     Tuple,
     Union,
 )
@@ -382,6 +383,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                     current_add_args,
                     current_target,
                     current_masks,
+                    current_feat_list,
                 ) in self._perturbation_generator(
                     inputs_tuple,
                     additional_forward_args,
@@ -423,8 +425,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                             all_eval[num_examples:] - all_eval[:-num_examples]
                         ).to(inputs_tuple[0].device)
                         prev_results = all_eval[-num_examples:]
-
-                    for j in range(len(total_attrib)):
+                    for j in current_feat_list:
                         # format eval_diff to shape
                         # (n_perturb, *output_shape, 1,.. 1)
                         # where n_perturb may not be perturb_per_eval
@@ -545,6 +546,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                     current_add_args,
                     current_target,
                     current_masks,
+                    _,
                 ) in self._perturbation_generator(
                     inputs_tuple,
                     additional_forward_args,
@@ -827,7 +829,9 @@ class ShapleyValueSampling(PerturbationAttribution):
         input_masks: Tuple[Tensor, ...],
         feature_permutation: Sequence[int],
         perturbations_per_eval: int,
-    ) -> Iterable[Tuple[Tuple[Tensor, ...], object, TargetType, Tuple[Tensor, ...]]]:
+    ) -> Iterable[
+        Tuple[Tuple[Tensor, ...], object, TargetType, Tuple[Tensor, ...], Set[int]]
+    ]:
         """
         This method is a generator which yields each perturbation to be evaluated
         including inputs, additional_forward_args, targets, and mask.
@@ -837,6 +841,7 @@ class ShapleyValueSampling(PerturbationAttribution):
         current_tensors = baselines
         current_tensors_list = []
         current_mask_list = []
+        current_feat_list = set()
 
         # Compute repeated additional args and targets
         additional_args_repeated = (
@@ -869,6 +874,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                     device=inputs[0].device,
                 )
             )
+            current_feat_list.update(feat_tensor_index_map[feature_permutation[i]])
 
             if len(current_tensors_list) == perturbations_per_eval:
                 if len(current_tensors_list) > 1:
@@ -888,9 +894,11 @@ class ShapleyValueSampling(PerturbationAttribution):
                     additional_args_repeated,
                     target_repeated,
                     combined_masks,
+                    current_feat_list,
                 )
                 current_tensors_list = []
                 current_mask_list = []
+                current_feat_list = set()
 
         # Create batch with remaining evaluations, may not be a complete batch
         # (= perturbations_per_eval)
@@ -916,6 +924,7 @@ class ShapleyValueSampling(PerturbationAttribution):
                 additional_args_repeated,
                 target_repeated,
                 combined_masks,
+                current_feat_list,
             )
 
     def _get_n_evaluations(
