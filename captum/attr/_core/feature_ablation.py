@@ -24,6 +24,7 @@ from captum._utils.common import (
     _format_additional_forward_args,
     _format_feature_mask,
     _format_output,
+    _get_feature_idx_to_tensor_idx,
     _is_tuple,
     _maybe_expand_parameters,
     _run_forward,
@@ -616,17 +617,7 @@ class FeatureAblation(PerturbationAttribution):
     def _get_feature_idx_to_tensor_idx(
         self, formatted_feature_mask: Tuple[Tensor, ...], **kwargs: Any
     ) -> Dict[int, List[int]]:
-        """
-        For a given tuple of tensors, return dict of tensor values to list of tensor
-        indices they appear in.
-        """
-        feature_idx_to_tensor_idx: Dict[int, List[int]] = {}
-        for i, mask in enumerate(formatted_feature_mask):
-            for feature_idx in torch.unique(mask):
-                if feature_idx.item() not in feature_idx_to_tensor_idx:
-                    feature_idx_to_tensor_idx[feature_idx.item()] = []
-                feature_idx_to_tensor_idx[feature_idx.item()].append(i)
-        return feature_idx_to_tensor_idx
+        return _get_feature_idx_to_tensor_idx(formatted_feature_mask)
 
     def _should_skip_inputs_and_warn(
         self,
