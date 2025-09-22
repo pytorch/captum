@@ -908,6 +908,22 @@ def _get_max_feature_index(feature_mask: Tuple[Tensor, ...]) -> int:
     return int(max(torch.max(mask).item() for mask in feature_mask if mask.numel()))
 
 
+def _get_feature_idx_to_tensor_idx(
+    formatted_feature_mask: Tuple[Tensor, ...],
+) -> Dict[int, List[int]]:
+    """
+    For a given tuple of tensors, return dict of tensor values to list of tensor
+    indices they appear in.
+    """
+    feature_idx_to_tensor_idx: Dict[int, List[int]] = {}
+    for i, mask in enumerate(formatted_feature_mask):
+        for feature_idx in torch.unique(mask):
+            if feature_idx.item() not in feature_idx_to_tensor_idx:
+                feature_idx_to_tensor_idx[feature_idx.item()] = []
+            feature_idx_to_tensor_idx[feature_idx.item()].append(i)
+    return feature_idx_to_tensor_idx
+
+
 def _maybe_expand_parameters(
     perturbations_per_eval: int,
     formatted_inputs: Tuple[Tensor, ...],
