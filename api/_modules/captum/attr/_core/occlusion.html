@@ -315,57 +315,6 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"attribute_future is not implemented for Occlusion"</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_construct_ablated_input</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">expanded_input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
-        <span class="n">input_mask</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span>
-        <span class="n">baseline</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">],</span>
-        <span class="n">start_feature</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">end_feature</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">]:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        Ablates given expanded_input tensor with given feature mask, feature range,</span>
-<span class="sd">        and baselines, and any additional arguments.</span>
-<span class="sd">        expanded_input shape is (num_features, num_examples, ...)</span>
-<span class="sd">        with remaining dimensions corresponding to remaining original tensor</span>
-<span class="sd">        dimensions and num_features = end_feature - start_feature.</span>
-
-<span class="sd">        input_mask is None for occlusion, and the mask is constructed</span>
-<span class="sd">        using sliding_window_tensors, strides, and shift counts, which are provided in</span>
-<span class="sd">        kwargs. baseline is expected to</span>
-<span class="sd">        be broadcastable to match expanded_input.</span>
-
-<span class="sd">        This method returns the ablated input tensor, which has the same</span>
-<span class="sd">        dimensionality as expanded_input as well as the corresponding mask with</span>
-<span class="sd">        either the same dimensionality as expanded_input or second dimension</span>
-<span class="sd">        being 1. This mask contains 1s in locations which have been ablated (and</span>
-<span class="sd">        thus counted towards ablations for that feature) and 0s otherwise.</span>
-<span class="sd">        """</span>
-        <span class="n">input_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
-            <span class="p">[</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_occlusion_mask</span><span class="p">(</span>
-                    <span class="n">expanded_input</span><span class="p">,</span>
-                    <span class="n">j</span><span class="p">,</span>
-                    <span class="n">kwargs</span><span class="p">[</span><span class="s2">"sliding_window_tensors"</span><span class="p">],</span>
-                    <span class="n">kwargs</span><span class="p">[</span><span class="s2">"strides"</span><span class="p">],</span>
-                    <span class="n">kwargs</span><span class="p">[</span><span class="s2">"shift_counts"</span><span class="p">],</span>
-                    <span class="n">is_expanded_input</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_feature</span><span class="p">,</span> <span class="n">end_feature</span><span class="p">)</span>
-            <span class="p">],</span>
-            <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
-        <span class="k">assert</span> <span class="n">baseline</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"baseline should not be None"</span>
-        <span class="n">ablated_tensor</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">expanded_input</span>
-            <span class="o">*</span> <span class="p">(</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">expanded_input</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-                <span class="o">-</span> <span class="n">input_mask</span>
-            <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">expanded_input</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-        <span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">baseline</span> <span class="o">*</span> <span class="n">input_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">expanded_input</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">ablated_tensor</span><span class="p">,</span> <span class="n">input_mask</span>
-
     <span class="k">def</span> <span class="nf">_occlusion_mask</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="nb">input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
@@ -419,21 +368,6 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">sliding_window_tsr</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">pad_values</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">padded_tensor</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">padded_tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-
-    <span class="k">def</span> <span class="nf">_get_feature_range_and_mask</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">input_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]:</span>
-        <span class="n">feature_max</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">"shift_counts"</span><span class="p">]))</span>
-        <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="n">feature_max</span><span class="p">,</span> <span class="kc">None</span>
-
-    <span class="k">def</span> <span class="nf">_get_feature_counts</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">,</span>
-        <span class="n">feature_mask</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""return the numbers of possible input features"""</span>
-        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">counts</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"shift_counts"</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">_get_feature_idx_to_tensor_idx</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">formatted_feature_mask</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
