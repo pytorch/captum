@@ -66,10 +66,7 @@ feature importance across all examples in the batch.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="captum.attr.ShapleyValueSampling.attribute">
 <span class="sig-name descname"><span class="pre">attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baselines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_forward_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbations_per_eval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/captum/attr/_core/shapley_value.html#ShapleyValueSampling.attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#captum.attr.ShapleyValueSampling.attribute" title="Link to this definition">¶</a></dt>
-<dd><p>NOTE: The feature_mask argument differs from other perturbation based
-methods, since feature indices can overlap across tensors. See the
-description of the feature_mask argument below for more details.</p>
-<dl class="field-list simple">
+<dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>inputs</strong> (<a class="reference external" href="https://docs.pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.8)"><em>Tensor</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v2.8)"><em>Tensor</em></a><em>, </em><em>...</em><em>]</em>) – Input for which Shapley value
@@ -158,8 +155,7 @@ broadcastable to match the input tensor. Values across
 all tensors should be integers in the range 0 to
 num_features - 1, and indices corresponding to the same
 feature should have the same value.
-Note that features are grouped across tensors
-(unlike feature ablation and occlusion), so
+Note that features are grouped across tensors, so
 if the same index is used in different tensors, those
 features are still grouped and added simultaneously.
 If the forward function returns a single scalar per batch,

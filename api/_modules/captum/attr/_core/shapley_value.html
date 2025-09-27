@@ -166,10 +166,6 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">show_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        NOTE: The feature_mask argument differs from other perturbation based</span>
-<span class="sd">        methods, since feature indices can overlap across tensors. See the</span>
-<span class="sd">        description of the feature_mask argument below for more details.</span>
-
 <span class="sd">        Args:</span>
 
 <span class="sd">                inputs (Tensor or tuple[Tensor, ...]): Input for which Shapley value</span>
@@ -261,8 +257,7 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                            all tensors should be integers in the range 0 to</span>
 <span class="sd">                            num_features - 1, and indices corresponding to the same</span>
 <span class="sd">                            feature should have the same value.</span>
-<span class="sd">                            Note that features are grouped across tensors</span>
-<span class="sd">                            (unlike feature ablation and occlusion), so</span>
+<span class="sd">                            Note that features are grouped across tensors, so</span>
 <span class="sd">                            if the same index is used in different tensors, those</span>
 <span class="sd">                            features are still grouped and added simultaneously.</span>
 <span class="sd">                            If the forward function returns a single scalar per batch,</span>
@@ -560,7 +555,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="n">prev_result_tuple</span><span class="p">:</span> <span class="n">Future</span><span class="p">[</span>
                 <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Size</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span>
             <span class="p">]</span> <span class="o">=</span> <span class="n">initial_eval</span><span class="o">.</span><span class="n">then</span><span class="p">(</span>
-                <span class="k">lambda</span> <span class="n">inp</span><span class="o">=</span><span class="n">initial_eval</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initialEvalToPrevResultsTuple</span><span class="p">(</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
+                <span class="k">lambda</span> <span class="n">inp</span><span class="o">=</span><span class="n">initial_eval</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_initial_eval_to_prev_results_tuple</span><span class="p">(</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
                     <span class="n">inp</span><span class="p">,</span>
                     <span class="n">num_examples</span><span class="p">,</span>
                     <span class="n">perturbations_per_eval</span><span class="p">,</span>
@@ -576,7 +571,7 @@ src="/_sphinx/documentation_options.js"></script>
                 <span class="n">total_features</span><span class="p">,</span> <span class="n">n_samples</span>
             <span class="p">):</span>
                 <span class="n">prev_result_tuple</span> <span class="o">=</span> <span class="n">prev_result_tuple</span><span class="o">.</span><span class="n">then</span><span class="p">(</span>
-                    <span class="k">lambda</span> <span class="n">inp</span><span class="o">=</span><span class="n">prev_result_tuple</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_setPrevResultsToInitialEval</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
+                    <span class="k">lambda</span> <span class="n">inp</span><span class="o">=</span><span class="n">prev_result_tuple</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_prev_results_to_initial_eval</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
                 <span class="p">)</span>
 
                 <span class="n">iter_count</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -629,7 +624,7 @@ src="/_sphinx/documentation_options.js"></script>
                     <span class="p">]</span> <span class="o">=</span> <span class="n">collect_all</span><span class="p">([</span><span class="n">prev_result_tuple</span><span class="p">,</span> <span class="n">modified_eval</span><span class="p">])</span>
 
                     <span class="n">prev_result_tuple</span> <span class="o">=</span> <span class="n">eval_futs</span><span class="o">.</span><span class="n">then</span><span class="p">(</span>
-                        <span class="k">lambda</span> <span class="n">evals</span><span class="o">=</span><span class="n">eval_futs</span><span class="p">,</span> <span class="n">masks</span><span class="o">=</span><span class="n">current_masks</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evalFutToPrevResultsTuple</span><span class="p">(</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
+                        <span class="k">lambda</span> <span class="n">evals</span><span class="o">=</span><span class="n">eval_futs</span><span class="p">,</span> <span class="n">masks</span><span class="o">=</span><span class="n">current_masks</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_fut_to_prev_results_tuple</span><span class="p">(</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
                             <span class="n">evals</span><span class="p">,</span> <span class="n">num_examples</span><span class="p">,</span> <span class="n">inputs_tuple</span><span class="p">,</span> <span class="n">masks</span>
                         <span class="p">)</span>
                     <span class="p">)</span>
@@ -641,7 +636,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="c1"># formatted attributions.</span>
             <span class="n">formatted_attr</span><span class="p">:</span> <span class="n">Future</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">prev_result_tuple</span><span class="o">.</span><span class="n">then</span><span class="p">(</span>
-                    <span class="k">lambda</span> <span class="n">inp</span><span class="o">=</span><span class="n">prev_result_tuple</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prevResultTupleToFormattedAttr</span><span class="p">(</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
+                    <span class="k">lambda</span> <span class="n">inp</span><span class="o">=</span><span class="n">prev_result_tuple</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prev_result_tuple_to_formatted_attr</span><span class="p">(</span>  <span class="c1"># type: ignore # noqa: E501 line too long</span>
                         <span class="n">inp</span><span class="p">,</span> <span class="n">iter_count</span><span class="p">,</span> <span class="n">is_inputs_tuple</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
@@ -649,7 +644,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">Future</span><span class="p">[</span><span class="n">TensorOrTupleOfTensorsGeneric</span><span class="p">],</span> <span class="n">formatted_attr</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_initialEvalToPrevResultsTuple</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_initial_eval_to_prev_results_tuple</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">initial_eval</span><span class="p">:</span> <span class="n">Future</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span>
         <span class="n">num_examples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -697,7 +692,7 @@ src="/_sphinx/documentation_options.js"></script>
             <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="nf">_setPrevResultsToInitialEval</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_set_prev_results_to_initial_eval</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">processed_initial_eval</span><span class="p">:</span> <span class="n">Future</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Size</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Size</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]:</span>
@@ -709,7 +704,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="n">prev_results</span> <span class="o">=</span> <span class="n">initial_eval</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">initial_eval</span><span class="p">,</span> <span class="n">prev_results</span><span class="p">,</span> <span class="n">output_shape</span><span class="p">,</span> <span class="n">total_attrib</span><span class="p">,</span> <span class="n">agg_output_mode</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_evalFutToPrevResultsTuple</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_eval_fut_to_prev_results_tuple</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">eval_futs</span><span class="p">:</span> <span class="n">Future</span><span class="p">[</span>
             <span class="n">List</span><span class="p">[</span>
@@ -795,7 +790,7 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="nf">_prevResultTupleToFormattedAttr</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_prev_result_tuple_to_formatted_attr</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">prev_result_tuple</span><span class="p">:</span> <span class="n">Future</span><span class="p">[</span>
             <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span>
