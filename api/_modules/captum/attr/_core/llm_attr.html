@@ -38,11 +38,22 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span> <span class="nn">textwrap</span> <span class="kn">import</span> <span class="n">dedent</span><span class="p">,</span> <span class="n">shorten</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">cast</span><span class="p">,</span>
+    <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">Type</span><span class="p">,</span>
+    <span class="n">TYPE_CHECKING</span><span class="p">,</span>
+    <span class="n">Union</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="k">as</span> <span class="nn">mcolors</span>
 
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.typing</span> <span class="k">as</span> <span class="nn">npt</span>
 
@@ -66,6 +77,9 @@ src="/_sphinx/documentation_options.js"></script>
     <span class="n">TextTemplateInput</span><span class="p">,</span>
     <span class="n">TextTokenInput</span><span class="p">,</span>
 <span class="p">)</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">import</span> <span class="n">Axes</span><span class="p">,</span> <span class="n">Figure</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span><span class="p">,</span> <span class="n">Tensor</span>
 
 <span class="n">DEFAULT_GEN_ARGS</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
@@ -181,7 +195,7 @@ src="/_sphinx/documentation_options.js"></script>
 <a class="viewcode-back" href="../../../../llm_attr.html#captum.attr.LLMAttributionResult.plot_token_attr">[docs]</a>
     <span class="k">def</span> <span class="nf">plot_token_attr</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="s2">"Figure"</span><span class="p">,</span> <span class="s2">"Axes"</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Generate a matplotlib plot for visualising the attribution</span>
 <span class="sd">        of the output tokens.</span>
@@ -202,6 +216,8 @@ src="/_sphinx/documentation_options.js"></script>
         <span class="c1"># used as the boundary of normalization</span>
         <span class="c1"># always keep 0 as the mid point to differentiate pos/neg attr</span>
         <span class="n">max_abs_attr_val</span> <span class="o">=</span> <span class="n">token_attr</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
 
@@ -282,9 +298,7 @@ src="/_sphinx/documentation_options.js"></script>
 
 <div class="viewcode-block" id="LLMAttributionResult.plot_seq_attr">
 <a class="viewcode-back" href="../../../../llm_attr.html#captum.attr.LLMAttributionResult.plot_seq_attr">[docs]</a>
-    <span class="k">def</span> <span class="nf">plot_seq_attr</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">]]:</span>
+    <span class="k">def</span> <span class="nf">plot_seq_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="s2">"Figure"</span><span class="p">,</span> <span class="s2">"Axes"</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Generate a matplotlib plot for visualising the attribution</span>
 <span class="sd">        of the output sequence.</span>
@@ -293,6 +307,8 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">            show (bool): whether to show the plot directly or return the figure and axis</span>
 <span class="sd">                Default: False</span>
 <span class="sd">        """</span>
+
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
 
