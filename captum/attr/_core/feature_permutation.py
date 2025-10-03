@@ -20,6 +20,7 @@ def _permute_feature(x: Tensor, feature_mask: Tensor) -> Tensor:
     while (perm == no_perm).all():
         perm = torch.randperm(n)
 
+    perm = perm.to(x.device)
     return (x[perm] * feature_mask.to(dtype=x.dtype)) + (
         x * feature_mask.bitwise_not().to(dtype=x.dtype)
     )
@@ -327,7 +328,7 @@ class FeaturePermutation(FeatureAblation):
         for i, input_tensor in enumerate(inputs):
             if i not in tensor_idxs:
                 current_masks.append(None)
-                permuted_inputs.append(input_tensor)
+                permuted_inputs.append(input_tensor.clone())
                 continue
             tensor_mask = []
             permuted_input = input_tensor.clone()
