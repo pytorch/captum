@@ -16,8 +16,8 @@ requirements:
     - python>=3.9
     - setuptools
   run:
-    - numpy<2.0
-    - pytorch>=1.13
+    - numpy
+    - pytorch>=2.3
     - matplotlib-base
     - tqdm
     - packaging
