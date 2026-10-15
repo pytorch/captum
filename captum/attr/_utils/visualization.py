@@ -1103,6 +1103,7 @@ def visualize_timeseries_attr(
     else:
         raise AssertionError("Invalid visualization method: {}".format(method))
 
+    # pyrefly: ignore [unsupported-operation]
     plt.xlim((float(x_values[0]), float(x_values[-1])))
 
     if show_colorbar:
