@@ -132,9 +132,9 @@ corresponding sized tensors is returned.</p>
 attribution algorithm. Not all attribution algorithms
 return delta value. It is computed only for some
 algorithms, e.g. integrated gradients.
-Delta is computed for each input in the batch
-and represents the arithmetic mean
-across all <cite>nt_samples</cite> perturbed tensors for that input.</p>
+Delta is returned for each perturbed input, as a tensor
+of size <cite>batch_size * nt_samples</cite>, where the
+<cite>nt_samples</cite> deltas of each input are contiguous.</p>
 </dd>
 </dl>
 </li>

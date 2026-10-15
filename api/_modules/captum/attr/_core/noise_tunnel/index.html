@@ -196,9 +196,9 @@ src="/_sphinx/documentation_options.js"></script>
 <span class="sd">                        attribution algorithm. Not all attribution algorithms</span>
 <span class="sd">                        return delta value. It is computed only for some</span>
 <span class="sd">                        algorithms, e.g. integrated gradients.</span>
-<span class="sd">                        Delta is computed for each input in the batch</span>
-<span class="sd">                        and represents the arithmetic mean</span>
-<span class="sd">                        across all `nt_samples` perturbed tensors for that input.</span>
+<span class="sd">                        Delta is returned for each perturbed input, as a tensor</span>
+<span class="sd">                        of size `batch_size * nt_samples`, where the</span>
+<span class="sd">                        `nt_samples` deltas of each input are contiguous.</span>
 
 
 <span class="sd">        Examples::</span>
@@ -327,7 +327,12 @@ src="/_sphinx/documentation_options.js"></script>
 
             <span class="n">delta</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_delta_supported</span> <span class="ow">and</span> <span class="n">return_convergence_delta</span><span class="p">:</span>
-                <span class="n">delta</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">delta_partial_list</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="c1"># Each partial delta is ordered example-major within its</span>
+                <span class="c1"># partition, so regroup per example before flattening.</span>
+                <span class="n">bsz</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">delta</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">d</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">delta_partial_list</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_checks_and_return_attributions</span><span class="p">(</span>
             <span class="n">attributions</span><span class="p">,</span>
